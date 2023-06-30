@@ -1,4 +1,4 @@
-package ru.practicum.shareit.user;/* # parse("File Header.java")*/
+package ru.practicum.shareit.user.dto;/* # parse("File Header.java")*/
 
 import lombok.Data;
 

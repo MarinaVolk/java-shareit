@@ -26,8 +26,14 @@ public class ErrorHandler {
     }
 
     @ExceptionHandler
-    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    @ResponseStatus(HttpStatus.NOT_FOUND)
     public ErrorResponse requestValidationExceptionHandler(final IncorrectOwnerId e) {
+        return new ErrorResponse("Error:" + e.getMessage());
+    }
+
+    @ExceptionHandler
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    public ErrorResponse ItemValidationExceptionHandler(final ValidationException e) {
         return new ErrorResponse("Error:" + e.getMessage());
     }
 

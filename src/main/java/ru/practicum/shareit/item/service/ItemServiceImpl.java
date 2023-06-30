@@ -1,14 +1,19 @@
-package ru.practicum.shareit.item;/* # parse("File Header.java")*/
+package ru.practicum.shareit.item.service;/* # parse("File Header.java")*/
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 import ru.practicum.shareit.exception.IncorrectOwnerId;
 import ru.practicum.shareit.exception.NotFoundException;
+import ru.practicum.shareit.item.ItemMapper;
+import ru.practicum.shareit.item.ItemValidator;
 import ru.practicum.shareit.item.dto.ItemDto;
 import ru.practicum.shareit.item.model.Item;
-import ru.practicum.shareit.user.InMemoryUserRepository;
+import ru.practicum.shareit.item.repository.ItemInMemoryRepository;
+import ru.practicum.shareit.item.repository.ItemRepository;
+import ru.practicum.shareit.user.repository.UserRepository;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -25,12 +30,17 @@ import java.util.stream.Collectors;
 @Slf4j
 public class ItemServiceImpl implements ItemService {
     ItemRepository itemRepository = new ItemInMemoryRepository();
-    InMemoryUserRepository userRepository = new InMemoryUserRepository();
+    @Autowired
+    UserRepository userRepository;
+    ItemValidator validator = new ItemValidator();
 
     @Override
     public ItemDto addItem(Long userId, ItemDto itemDto) {
         Item item = ItemMapper.fromDto(itemDto);
-
+        if (userRepository.getUserById(userId) == null) {
+            throw new NotFoundException("Такого пользователя в базе нет.");
+        }
+        validator.isValid(item);
         item.setOwnerId(userId);
         item = itemRepository.addItem(item);
         return ItemMapper.toDto(item);
@@ -47,7 +57,9 @@ public class ItemServiceImpl implements ItemService {
         }
 
         log.info("ItemService: вещь с id={} обновлена.", itemId);
-        Item item = itemRepository.updateItem(updateItem);
+        Item item = itemUpdate(updateItem, oldItem);
+        item.setId(itemId);
+        item = itemRepository.updateItem(item);
         return ItemMapper.toDto(item);
     }
 
@@ -78,10 +90,39 @@ public class ItemServiceImpl implements ItemService {
         } else {
             log.info("ItemService: запрос для поиска вещей содержащих текст \"{}\"", text);
             return itemRepository.searchItemByText(text).stream()
-                            .filter(item -> item.getAvailable().equals(true))
+                    .filter(item -> item.getAvailable().equals(true))
                     .map(ItemMapper::toDto)
                     .collect(Collectors.toList());
         }
+    }
+
+    private Item itemUpdate(Item updateItem, Item oldItem) {
+        Item item = new Item();
+
+        if (updateItem.getName() != null) {
+            item.setName(updateItem.getName());
+        } else {
+            item.setName(oldItem.getName());
+        }
+
+        if (updateItem.getDescription() != null) {
+            item.setDescription(updateItem.getDescription());
+        } else {
+            item.setDescription(oldItem.getDescription());
+        }
+
+        if (updateItem.getAvailable() != null) {
+            item.setAvailable(updateItem.getAvailable());
+        } else {
+            item.setAvailable(oldItem.getAvailable());
+        }
+
+        if (updateItem.getOwnerId() != null) {
+            item.setOwnerId(updateItem.getOwnerId());
+        } else {
+            item.setOwnerId(oldItem.getOwnerId());
+        }
+        return item;
     }
 
 }

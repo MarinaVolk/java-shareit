@@ -1,12 +1,12 @@
-package ru.practicum.shareit.user;/* # parse("File Header.java")*/
+package ru.practicum.shareit.user.repository;/* # parse("File Header.java")*/
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Repository;
-import ru.practicum.shareit.exception.EmailValidationException;
 import ru.practicum.shareit.exception.NotFoundException;
 import ru.practicum.shareit.exception.UserEmailAlreadyUsedException;
-import ru.practicum.shareit.exception.EmailValidationException;
+import ru.practicum.shareit.user.UserValidator;
+import ru.practicum.shareit.user.model.User;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -14,7 +14,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 /**
- * File Name: InMemoryUserRepository.java
+ * File Name: UserInMemoryRepository.java
  * Author: Marina Volkova
  * Date: 2023-06-27,   9:37 PM (UTC+3)
  * Description:
@@ -22,9 +22,10 @@ import java.util.stream.Collectors;
 @Repository
 @Qualifier("InMemoryUserRepository")
 @Slf4j
-public class InMemoryUserRepository implements UserRepository {
+public class UserInMemoryRepository implements UserRepository {
     private final HashMap<Long, User> users = new HashMap<>();
     private Long lastId = 0L;
+    UserValidator validator = new UserValidator();
 
     @Override
     public User addUser(User user) {
@@ -79,12 +80,7 @@ public class InMemoryUserRepository implements UserRepository {
 
     private void emailCheckOnCreation(User user) {
         log.info("Проверка Email={} при добавлении пользователя.", user.getEmail());
-        if (user.getEmail() == null) {
-            throw new EmailValidationException("При создании пользователя не указан Email.");
-        }
-        if (!user.getEmail().contains("@")) {
-            throw new EmailValidationException("Электронная почта должна содержать символ \"@\".");
-        }
+        validator.isValid(user);
         if (getAllEmails().contains(user.getEmail())) {
             log.error("Email={} занят", user.getEmail());
             throw new UserEmailAlreadyUsedException("Пользователь с таким Email уже создан.");

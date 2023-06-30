@@ -1,8 +1,12 @@
-package ru.practicum.shareit.user;/* # parse("File Header.java")*/
+package ru.practicum.shareit.user.service;/* # parse("File Header.java")*/
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import ru.practicum.shareit.user.UserMapper;
+import ru.practicum.shareit.user.dto.UserDto;
+import ru.practicum.shareit.user.model.User;
+import ru.practicum.shareit.user.repository.UserInMemoryRepository;
 
 import java.util.Collection;
 import java.util.List;
@@ -18,7 +22,7 @@ import java.util.stream.Collectors;
 @Slf4j
 @RequiredArgsConstructor
 public class UserServiceImpl implements UserService {
-    private final InMemoryUserRepository userRepository;
+    private final UserInMemoryRepository userRepository;
 
     @Override
     public UserDto addUser(UserDto userDto) {

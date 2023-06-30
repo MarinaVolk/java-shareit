@@ -1,4 +1,4 @@
-package ru.practicum.shareit.item;/* # parse("File Header.java")*/
+package ru.practicum.shareit.item.repository;/* # parse("File Header.java")*/
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -58,7 +58,7 @@ public class ItemInMemoryRepository implements ItemRepository {
     }
 
     @Override
-    public List<Item> getItemListByOwnerId(Long userId){
+    public List<Item> getItemListByOwnerId(Long userId) {
         log.info("ItemRepository: запрос списка вещей пользователя с id={} ", userId);
         return getAll().stream()
                 .filter(item -> item.getOwnerId().equals(userId))
