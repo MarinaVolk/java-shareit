@@ -3,8 +3,6 @@ package ru.practicum.shareit.item;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;
-import ru.practicum.shareit.item.dto.ItemDto;
-import ru.practicum.shareit.item.service.ItemService;
 
 import java.util.List;
 
@@ -37,7 +35,7 @@ public class ItemController {
     }
 
     @GetMapping
-    public List<ItemDto> getItemsListByOwnerId(@RequestHeader(value = "X-Sharer-User-Id", required = false, defaultValue = "-1") Long userId) {
+    public List<ItemDto> getItemsListByOwnerId(@RequestHeader(value = "X-Sharer-User-Id", required = false, defaultValue = "null") Long userId) {
         log.info("ItemController.getItemsListByOwnerId: Получен запрос на список вещей пользователя с id={}", userId);
         return itemService.getItemsListByOwnerId(userId);
     }

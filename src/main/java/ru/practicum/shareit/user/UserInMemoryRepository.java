@@ -1,12 +1,10 @@
-package ru.practicum.shareit.user.repository;/* # parse("File Header.java")*/
+package ru.practicum.shareit.user;/* # parse("File Header.java")*/
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Repository;
 import ru.practicum.shareit.exception.NotFoundException;
 import ru.practicum.shareit.exception.UserEmailAlreadyUsedException;
-import ru.practicum.shareit.user.UserValidator;
-import ru.practicum.shareit.user.model.User;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -20,7 +18,7 @@ import java.util.stream.Collectors;
  * Description:
  */
 @Repository
-@Qualifier("InMemoryUserRepository")
+@Qualifier("UserInMemoryRepository")
 @Slf4j
 public class UserInMemoryRepository implements UserRepository {
     private final HashMap<Long, User> users = new HashMap<>();

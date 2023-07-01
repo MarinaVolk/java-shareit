@@ -1,8 +1,8 @@
 package ru.practicum.shareit.item;/* # parse("File Header.java")*/
 
+import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 import ru.practicum.shareit.exception.ValidationException;
-import ru.practicum.shareit.item.model.Item;
 
 /**
  * File Name: ItemValidator.java
@@ -10,6 +10,7 @@ import ru.practicum.shareit.item.model.Item;
  * Date: 2023-06-30,   11:22 AM (UTC+3)
  * Description:
  */
+@Component
 public class ItemValidator {
     public void isValid(Item item) throws ValidationException {
         validateName(item.getName());

@@ -1,4 +1,4 @@
-package ru.practicum.shareit.item.service;/* # parse("File Header.java")*/
+package ru.practicum.shareit.item;/* # parse("File Header.java")*/
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -7,13 +7,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 import ru.practicum.shareit.exception.IncorrectOwnerId;
 import ru.practicum.shareit.exception.NotFoundException;
-import ru.practicum.shareit.item.ItemMapper;
-import ru.practicum.shareit.item.ItemValidator;
-import ru.practicum.shareit.item.dto.ItemDto;
-import ru.practicum.shareit.item.model.Item;
-import ru.practicum.shareit.item.repository.ItemInMemoryRepository;
-import ru.practicum.shareit.item.repository.ItemRepository;
-import ru.practicum.shareit.user.repository.UserRepository;
+import ru.practicum.shareit.user.UserRepository;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -29,10 +23,12 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 @Slf4j
 public class ItemServiceImpl implements ItemService {
-    ItemRepository itemRepository = new ItemInMemoryRepository();
     @Autowired
-    UserRepository userRepository;
-    ItemValidator validator = new ItemValidator();
+    private ItemRepository itemRepository;
+    @Autowired
+    private UserRepository userRepository;
+    @Autowired
+    private ItemValidator validator;
 
     @Override
     public ItemDto addItem(Long userId, ItemDto itemDto) {

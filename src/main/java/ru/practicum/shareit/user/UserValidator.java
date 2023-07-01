@@ -1,8 +1,8 @@
 package ru.practicum.shareit.user;/* # parse("File Header.java")*/
 
+import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 import ru.practicum.shareit.exception.ValidationException;
-import ru.practicum.shareit.user.model.User;
 
 /**
  * File Name: UserValidator.java
@@ -10,6 +10,8 @@ import ru.practicum.shareit.user.model.User;
  * Date: 2023-06-30,   11:23 AM (UTC+3)
  * Description:
  */
+
+@Component
 public class UserValidator {
     public void isValid(User user) throws ValidationException {
         validateEmail(user.getEmail());

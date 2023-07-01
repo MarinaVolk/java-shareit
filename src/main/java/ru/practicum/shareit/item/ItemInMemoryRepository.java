@@ -1,10 +1,9 @@
-package ru.practicum.shareit.item.repository;/* # parse("File Header.java")*/
+package ru.practicum.shareit.item;/* # parse("File Header.java")*/
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Repository;
 import ru.practicum.shareit.exception.NotFoundException;
-import ru.practicum.shareit.item.model.Item;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -19,7 +18,7 @@ import java.util.stream.Collectors;
  */
 @Repository
 @Slf4j
-@Qualifier("ItemRepository")
+@Qualifier("ItemInMemoryRepository")
 public class ItemInMemoryRepository implements ItemRepository {
     private final HashMap<Long, Item> items = new HashMap<>();
     private Long itemId = 0L;

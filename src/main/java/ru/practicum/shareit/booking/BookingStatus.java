@@ -1,4 +1,4 @@
-package ru.practicum.shareit.booking.model;/* # parse("File Header.java")*/
+package ru.practicum.shareit.booking;/* # parse("File Header.java")*/
 
 /**
  * File Name: BookingStatus.java
