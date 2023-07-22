@@ -14,4 +14,6 @@ public interface UserService {
     Collection<UserDto> getAll();
 
     void deleteUserById(Long userId);
+
+    Boolean userExistsById(Long userId);
 }

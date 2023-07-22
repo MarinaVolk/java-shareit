@@ -7,7 +7,7 @@ public class ItemDto {
     private Long id;
     private String name;
     private String description;
-    private Boolean available;
+    private Boolean isAvailable;
     private Long ownerId;
     private Long requestId;
 }

@@ -4,6 +4,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import ru.practicum.shareit.booking.BookingService;
 
 import java.util.Collection;
 import java.util.List;
@@ -19,38 +20,39 @@ import java.util.stream.Collectors;
 @Slf4j
 @RequiredArgsConstructor
 public class UserServiceImpl implements UserService {
-    @Autowired
-    private UserRepository userRepository;
+    private final UserRepository userRepository;
 
     @Override
     public UserDto addUser(UserDto userDto) {
         User user = UserMapper.fromDto(userDto);
         log.info("UserService: Создание пользователя с id={} ", user.getId());
-        user = userRepository.addUser(user);
+        //user = userRepository.addUser(user);
+        user = userRepository.save(user);
         return UserMapper.toDto(user);
     }
 
     @Override
     public UserDto updateUser(UserDto userDto, Long userId) {
         User userUpdated = UserMapper.fromDto(userDto);
-        User oldUser = userRepository.getUserById(userId);
+        //User oldUser = userRepository.getUserById(userId);
+        User oldUser = userRepository.getReferenceById(userId);
 
         log.info("UserService: Обновление пользователя с id={} ", userId);
         User user = userUpdate(userUpdated, oldUser);
         user.setId(userId);
-        user = userRepository.updateUser(user);
+        user = userRepository.save(user);
         return UserMapper.toDto(user);
     }
 
     @Override
     public UserDto getUserById(Long userId) {
-        User user = userRepository.getUserById(userId);
+        User user = userRepository.getReferenceById(userId);
         return UserMapper.toDto(user);
     }
 
     @Override
     public Collection<UserDto> getAll() {
-        List<User> allUsers = userRepository.getAll();
+        List<User> allUsers = userRepository.findAll();
         return allUsers.stream()
                 .map(UserMapper::toDto)
                 .collect(Collectors.toList());
@@ -58,7 +60,12 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public void deleteUserById(Long userId) {
-        userRepository.deleteUserById(userId);
+        userRepository.deleteById(userId);
+    }
+
+    @Override
+    public Boolean userExistsById(Long userId) {
+        return userRepository.existsById(userId);
     }
 
 

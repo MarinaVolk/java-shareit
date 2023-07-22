@@ -46,4 +46,13 @@ public class ItemController {
         return itemService.searchItemByText(text);
     }
 
+    @PostMapping("/{itemId}/comment")
+    public CommentDto addCommentToItem(@RequestHeader("X-Sharer-User-Id") Long authorId,
+                                       @PathVariable Long itemId,
+                                       @RequestBody Comment comment) {
+
+        log.info("ItemController: запрос на добавление комментария к вещи с id={}", itemId);
+        return itemService.addComment(comment, itemId, authorId);
+    }
+
 }

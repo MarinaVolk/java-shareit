@@ -7,6 +7,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 import ru.practicum.shareit.exception.IncorrectOwnerId;
 import ru.practicum.shareit.exception.NotFoundException;
+import ru.practicum.shareit.exception.ValidationException;
 import ru.practicum.shareit.user.UserRepository;
 
 import java.util.ArrayList;
@@ -23,29 +24,27 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 @Slf4j
 public class ItemServiceImpl implements ItemService {
-    @Autowired
-    private ItemRepository itemRepository;
-    @Autowired
-    private UserRepository userRepository;
-    @Autowired
-    private ItemValidator validator;
+    private final ItemRepository itemRepository;
+    private final UserRepository userRepository;
+    private final CommentRepository commentRepository;
+    private final ItemValidator validator;
 
     @Override
     public ItemDto addItem(Long userId, ItemDto itemDto) {
         Item item = ItemMapper.fromDto(itemDto);
-        if (userRepository.getUserById(userId) == null) {
+        if /*(userRepository.getUserById(userId) == null)*/ (!userRepository.existsById(userId)) {
             throw new NotFoundException("Такого пользователя в базе нет.");
         }
         validator.isValid(item);
         item.setOwnerId(userId);
-        item = itemRepository.addItem(item);
+        item = itemRepository.save(item);
         return ItemMapper.toDto(item);
     }
 
     @Override
     public ItemDto updateItem(Long userId, ItemDto itemDto, Long itemId) {
         Item updateItem = ItemMapper.fromDto(itemDto);
-        Item oldItem = itemRepository.getItemById(itemId);
+        Item oldItem = itemRepository.getReferenceById(itemId);
 
         if (!oldItem.getOwnerId().equals(userId)) {
             log.error("ItemService: вещь с id={} не принадлежит пользователю с id={}", itemId, userId);
@@ -55,24 +54,24 @@ public class ItemServiceImpl implements ItemService {
         log.info("ItemService: вещь с id={} обновлена.", itemId);
         Item item = itemUpdate(updateItem, oldItem);
         item.setId(itemId);
-        item = itemRepository.updateItem(item);
+        item = itemRepository.save(item);
         return ItemMapper.toDto(item);
     }
 
     @Override
     public ItemDto getItemById(Long itemId) {
-        if (!itemRepository.itemIsContained(itemId)) {
+        if (!itemRepository.existsById(itemId)) {
             log.error("ItemService: Вещи с id={} в базе нет.", itemId);
             throw new NotFoundException("Такой вещи в базе нет.");
         }
-        Item item = itemRepository.getItemById(itemId);
+        Item item = itemRepository.getReferenceById(itemId);
         return ItemMapper.toDto(item);
     }
 
     @Override
     public List<ItemDto> getItemsListByOwnerId(Long userId) {
         log.info("ItemService: запрос для получения списка вещей владельца с id={} ", userId);
-        List<Item> itemsOfOwner = itemRepository.getItemListByOwnerId(userId);
+        List<Item> itemsOfOwner = itemRepository.findItemsByOwnerId(userId);
         return itemsOfOwner.stream()
                 .map(ItemMapper::toDto)
                 .collect(Collectors.toList());
@@ -85,11 +84,28 @@ public class ItemServiceImpl implements ItemService {
             return new ArrayList<>();
         } else {
             log.info("ItemService: запрос для поиска вещей содержащих текст \"{}\"", text);
-            return itemRepository.searchItemByText(text).stream()
-                    .filter(item -> item.getAvailable().equals(true))
+            return itemRepository.searchItemForRentByText(text).stream()
+                    .filter(item -> item.getIsAvailable().equals(true))
                     .map(ItemMapper::toDto)
                     .collect(Collectors.toList());
         }
+    }
+
+    @Override
+    public CommentDto addComment(Comment comment, Long itemId, Long authorId) {
+        if (!StringUtils.hasText(comment.getText())) {
+            throw new ValidationException("Текст комментария пустой.");
+        }
+
+        comment.setItemId(itemId);
+        comment.setAuthorId(authorId);
+        comment = commentRepository.save(comment);
+        return CommentMapper.toDto(comment);
+    }
+
+    @Override
+    public List<Comment> getCommentsByItemId(Long itemId) {
+        return commentRepository.findCommentsByItemId(itemId);
     }
 
     private Item itemUpdate(Item updateItem, Item oldItem) {
@@ -107,10 +123,10 @@ public class ItemServiceImpl implements ItemService {
             item.setDescription(oldItem.getDescription());
         }
 
-        if (updateItem.getAvailable() != null) {
-            item.setAvailable(updateItem.getAvailable());
+        if (updateItem.getIsAvailable() != null) {
+            item.setIsAvailable(updateItem.getIsAvailable());
         } else {
-            item.setAvailable(oldItem.getAvailable());
+            item.setIsAvailable(oldItem.getIsAvailable());
         }
 
         if (updateItem.getOwnerId() != null) {
