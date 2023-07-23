@@ -17,7 +17,7 @@ public class Item {
 
     private String description;
 
-    @Column
+    @Column(name = "is_available")
     private Boolean isAvailable;
 
     @NotNull
