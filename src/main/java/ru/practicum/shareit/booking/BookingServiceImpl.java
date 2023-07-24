@@ -3,13 +3,14 @@ package ru.practicum.shareit.booking;/* # parse("File Header.java")*/
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
-import ru.practicum.shareit.exception.NotFoundException;
-import ru.practicum.shareit.exception.ValidationException;
+import ru.practicum.shareit.exception.*;
 import ru.practicum.shareit.item.Item;
 import ru.practicum.shareit.item.ItemDto;
 import ru.practicum.shareit.item.ItemService;
+import ru.practicum.shareit.user.UserMapper;
 import ru.practicum.shareit.user.UserService;
 
+import javax.validation.ConstraintViolationException;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -36,19 +37,48 @@ public class BookingServiceImpl implements BookingService {
     public BookingDto addBooking(Booking booking, Long bookerId) {
 
         Booking bookingCheck = bookingRepository.findByBookerIdAndItemId(bookerId, booking.getItemId());
-
-        if (bookingCheck != null && bookingCheck.getState() == BookingState.REJECTED) {
+        if (bookingCheck != null && bookingCheck.getStatus() == BookingStatus.REJECTED) {
             throw new ValidationException("Повторное бронирование делать нельзя");
         }
 
+        if (!itemService.getItemById(booking.getItemId()).getAvailable()) {
+            throw new ValidationException("Вещь недоступна для бронирования.");
+        }
+
+        if (!userService.userExistsById(bookerId)) {
+            throw new UserEmailAlreadyUsedException("Такого пользователя не существует.");
+        }
+
+        if (!itemService.itemExistsById(booking.getItemId())) {
+            throw new UserEmailAlreadyUsedException("Такой вещи в базе нет.");
+        }
+
+
         booking.setBookerId(bookerId);
-        booking.setState(BookingState.WAITING);
+        booking.setStatus(BookingStatus.WAITING);
 
         bookingValidator.isValid(booking);
 
+        // wrong user id exception
         booking = bookingRepository.save(booking);
+        BookingDto bookingDto = bookingMapper.toDto(booking);
+        bookingDto.getItem().setName(itemService.getItemById(bookingDto.getItem().getId()).getName());
 
-        return bookingMapper.toDto(booking);
+        return bookingDto;
+    }
+
+    @Override
+    public BookingDto getBookingByIdAndBookerId(Long bookingId, Long bookerId) {
+        BookingDto bookingDto = getBookingById(bookingId);
+
+        if (!bookingDto.getBooker().getId().equals(bookerId)
+                && !itemService.getItemById(bookingDto.getItem().getId()).getOwnerId().equals(bookerId)) {
+            log.error("Бронирование может получить только его создатель "
+                    + "или владелец вещи для бронирования.");
+            throw new IncorrectOwnerId("Нет прав доступа к бронированию.");
+        }
+        bookingDto.getItem().setName(itemService.getItemById(bookingDto.getItem().getId()).getName());
+        return bookingDto;
     }
 
     @Override
@@ -58,11 +88,13 @@ public class BookingServiceImpl implements BookingService {
             log.error("BookingService: Бронирования с id={} не существует", bookingId);
             throw new NotFoundException("Такого бронирования в базе нет.");
         }
-        return bookingMapper.toDto(bookingRepository.getReferenceById(bookingId));
+        BookingDto bookingDto = bookingMapper.toDto(bookingRepository.getReferenceById(bookingId));
+        bookingDto.getItem().setName(itemService.getItemById(bookingDto.getItem().getId()).getName());
+        return bookingDto;
     }
 
     @Override
-    public BookingDto updateBookingState(BookingDto bookingDto) {
+    public BookingDto updateBookingStatus(BookingDto bookingDto) {
         return bookingMapper.toDto(bookingRepository.save(bookingMapper.fromDto(bookingDto)));
     }
 
@@ -92,28 +124,26 @@ public class BookingServiceImpl implements BookingService {
             throw new NotFoundException("Нет прав доступа к бронированию");
         }
 
-        if (!bookingDto.getState().equals(BookingState.WAITING)) {
+        if (!bookingDto.getStatus().equals(BookingStatus.WAITING)) {
             log.error("Статус бронирования {} с id={} уже был изменён владельцем вещи.",
-                    bookingDto.getState(), bookingId);
+                    bookingDto.getStatus(), bookingId);
             throw new ValidationException("Запрос уже был обработан владельцем вещи");
         }
 
         if (approved) {
-            bookingDto.setState(BookingState.APPROVED);
+            bookingDto.setStatus(BookingStatus.APPROVED);
         } else {
-            bookingDto.setState(BookingState.REJECTED);
+            bookingDto.setStatus(BookingStatus.REJECTED);
         }
 
-        bookingDto = updateBookingState(bookingDto);
+        bookingDto = updateBookingStatus(bookingDto);
 
         bookingDto.getItem().setName(itemService.getItemById(bookingDto.getItem().getId()).getName());
-
         return bookingDto;
-
     }
 
     @Override
-    public List<BookingDto> getAllBookingsByBookerIdDesc(Long bookerId, String state) {
+    public List<BookingDto> getAllBookingsByBookerIdDesc(Long bookerId, String status) {
 
         if (!userService.userExistsById(bookerId)) {
             log.error("Пользователя с id={} в базе нет", bookerId);
@@ -121,11 +151,11 @@ public class BookingServiceImpl implements BookingService {
         }
 
         List<BookingDto> bookingsByBookerId = getBookingsByBookerId(bookerId);
-        return getBookingDtos(state, bookingsByBookerId);
+        return getBookingDtos(status, bookingsByBookerId);
     }
 
     @Override
-    public List<BookingDto> getAllBookingsByItemOwnerId(Long ownerId, String state) {
+    public List<BookingDto> getAllBookingsByItemOwnerId(Long ownerId, String status) {
 
         if (!userService.userExistsById(ownerId)) {
             log.error("Пользователя с id={} в базе нет.", ownerId);
@@ -144,11 +174,11 @@ public class BookingServiceImpl implements BookingService {
 
         List<BookingDto> bookingsByItemOwnerId = getBookingsByIdItemsList(itemsIdByOwnerId);
 
-        return getBookingDtos(state, bookingsByItemOwnerId);
+        return getBookingDtos(status, bookingsByItemOwnerId);
 
     }
 
-    private List<BookingDto> getBookingDtos(String state, List<BookingDto> bookingsByItemOwnerId) {
+    private List<BookingDto> getBookingDtos(String status, List<BookingDto> bookingsByItemOwnerId) {
 
         Comparator<BookingDto> comparator = (o1, o2) -> {
             if (o1.getStart().isBefore(o2.getStart())) {
@@ -160,7 +190,7 @@ public class BookingServiceImpl implements BookingService {
             }
         };
 
-        switch (state) {
+        switch (status) {
             case "CURRENT":
                 return bookingsByItemOwnerId.stream()
                         .filter(x -> (x.getStart().isBefore(LocalDateTime.now()) && x.getEnd().isAfter(LocalDateTime.now())))
@@ -184,14 +214,14 @@ public class BookingServiceImpl implements BookingService {
 
             case "WAITING":
                 return bookingsByItemOwnerId.stream()
-                        .filter(x -> x.getState().equals(BookingState.WAITING))
+                        .filter(x -> x.getStatus().equals(BookingStatus.WAITING))
                         .peek(x -> x.getItem().setName(itemService.getItemById(x.getItem().getId()).getName()))
                         .sorted(comparator)
                         .collect(Collectors.toList());
 
             case "REJECTED":
                 return bookingsByItemOwnerId.stream()
-                        .filter(x -> x.getState().equals(BookingState.REJECTED))
+                        .filter(x -> x.getStatus().equals(BookingStatus.REJECTED))
                         .peek(x -> x.getItem().setName(itemService.getItemById(x.getItem().getId()).getName()))
                         .sorted(comparator)
                         .collect(Collectors.toList());
@@ -203,8 +233,8 @@ public class BookingServiceImpl implements BookingService {
                         .collect(Collectors.toList());
 
             default:
-                log.error("Неверный параметр state={}", state);
-                throw new ValidationException("Unknown state: " + state);
+                log.error("Неверный параметр status={}", status);
+                throw new UnSupportedStatusException("Unknown state: " + status);
         }
     }
 

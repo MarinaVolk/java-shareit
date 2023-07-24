@@ -19,5 +19,5 @@ public class BookingDto {
 
     private Booker booker;
 
-    private BookingState state;
+    private BookingStatus status;
 }

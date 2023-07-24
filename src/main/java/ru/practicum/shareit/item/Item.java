@@ -18,7 +18,7 @@ public class Item {
     private String description;
 
     @Column(name = "is_available")
-    private Boolean isAvailable;
+    private Boolean available;
 
     @NotNull
     @Column(name = "owner_id")

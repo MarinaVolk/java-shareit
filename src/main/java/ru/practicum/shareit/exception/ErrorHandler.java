@@ -49,4 +49,10 @@ public class ErrorHandler {
         return new ErrorResponse("Error:" + e.getMessage());
     }
 
+    @ExceptionHandler
+    @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
+    public ErrorResponse unSupportedStatusExceptionHandler(final UnSupportedStatusException e) {
+        return new ErrorResponse(e.getMessage());
+    }
+
 }

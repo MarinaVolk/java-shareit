@@ -15,7 +15,7 @@ public class ItemValidator {
     public void isValid(Item item) throws ValidationException {
         validateName(item.getName());
         validateDescription(item.getDescription());
-        validateAvailability(item.getIsAvailable());
+        validateAvailability(item.getAvailable());
     }
 
     private void validateName(String name) throws ValidationException {

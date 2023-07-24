@@ -32,10 +32,11 @@ public class ItemServiceImpl implements ItemService {
     @Override
     public ItemDto addItem(Long userId, ItemDto itemDto) {
         Item item = ItemMapper.fromDto(itemDto);
+
+        validator.isValid(item);
         if /*(userRepository.getUserById(userId) == null)*/ (!userRepository.existsById(userId)) {
             throw new NotFoundException("Такого пользователя в базе нет.");
         }
-        validator.isValid(item);
         item.setOwnerId(userId);
         item = itemRepository.save(item);
         return ItemMapper.toDto(item);
@@ -85,7 +86,7 @@ public class ItemServiceImpl implements ItemService {
         } else {
             log.info("ItemService: запрос для поиска вещей содержащих текст \"{}\"", text);
             return itemRepository.searchItemForRentByText(text).stream()
-                    .filter(item -> item.getIsAvailable().equals(true))
+                    .filter(item -> item.getAvailable().equals(true))
                     .map(ItemMapper::toDto)
                     .collect(Collectors.toList());
         }
@@ -108,6 +109,11 @@ public class ItemServiceImpl implements ItemService {
         return commentRepository.findCommentsByItemId(itemId);
     }
 
+    @Override
+    public Boolean itemExistsById(Long itemId) {
+        return itemRepository.existsById(itemId);
+    }
+
     private Item itemUpdate(Item updateItem, Item oldItem) {
         Item item = new Item();
 
@@ -123,10 +129,10 @@ public class ItemServiceImpl implements ItemService {
             item.setDescription(oldItem.getDescription());
         }
 
-        if (updateItem.getIsAvailable() != null) {
-            item.setIsAvailable(updateItem.getIsAvailable());
+        if (updateItem.getAvailable() != null) {
+            item.setAvailable(updateItem.getAvailable());
         } else {
-            item.setIsAvailable(oldItem.getIsAvailable());
+            item.setAvailable(oldItem.getAvailable());
         }
 
         if (updateItem.getOwnerId() != null) {

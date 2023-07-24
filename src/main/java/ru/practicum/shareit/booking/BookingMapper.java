@@ -14,7 +14,7 @@ import java.util.Optional;
 public class BookingMapper {
     public BookingDto toDto(Booking booking) {
         BookingDto bookingDto = new BookingDto();
-        bookingDto.setState(booking.getState());
+        bookingDto.setStatus(booking.getStatus());
         bookingDto.setStart(booking.getStart());
         bookingDto.setEnd(booking.getEnd());
         bookingDto.setItem(new ItemForResponse(booking.getItemId()));
@@ -29,7 +29,8 @@ public class BookingMapper {
         booking.setEnd(bookingDto.getEnd());
         booking.setBookerId(bookingDto.getBooker().getId());
         booking.setItemId(bookingDto.getItem().getId());
-        booking.setState(bookingDto.getState());
+        booking.setItemName(bookingDto.getItem().getName());
+        booking.setStatus(bookingDto.getStatus());
         Optional.ofNullable(bookingDto.getId()).ifPresent(booking::setId);
         return booking;
     }

@@ -7,7 +7,9 @@ public interface BookingService {
 
     BookingDto getBookingById(Long bookingId);
 
-    BookingDto updateBookingState(BookingDto bookingDto);
+    BookingDto getBookingByIdAndBookerId(Long bookingId, Long bookerId);
+
+    BookingDto updateBookingStatus(BookingDto bookingDto);
 
     List<BookingDto> getBookingsByBookerId(Long bookerId);
 
@@ -17,7 +19,7 @@ public interface BookingService {
 
     BookingDto approveBooking(Long ownerId, Long bookingId, Boolean approved);
 
-    List<BookingDto> getAllBookingsByBookerIdDesc(Long bookerId, String state);
+    List<BookingDto> getAllBookingsByBookerIdDesc(Long bookerId, String status);
 
-    List<BookingDto> getAllBookingsByItemOwnerId(Long ownerId, String state);
+    List<BookingDto> getAllBookingsByItemOwnerId(Long ownerId, String status);
 }

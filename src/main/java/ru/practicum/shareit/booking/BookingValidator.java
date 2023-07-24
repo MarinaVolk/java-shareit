@@ -16,6 +16,9 @@ import java.time.LocalDateTime;
 public class BookingValidator {
 
     public void isValid(Booking booking) throws ValidationException {
+        if ((booking.getStart() == null) || (booking.getEnd() == null)) {
+            throw new ValidationException("Даты начала аренды и окончания аренды должны быть заданы.");
+        }
         startValidator(booking.getStart());
         endValidator(booking.getEnd());
         rentDateValidator(booking.getStart(), booking.getEnd());
@@ -34,7 +37,7 @@ public class BookingValidator {
     }
 
     private void rentDateValidator(LocalDateTime start, LocalDateTime end) {
-        if (start.isAfter(end)) {
+        if (start.isAfter(end) || (start.isEqual(end))) {
             throw new ValidationException("Дата начала аренды не может быть после даты окончания.");
         }
     }

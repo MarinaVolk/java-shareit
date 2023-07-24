@@ -16,7 +16,7 @@ public class ItemMapper {
         ItemDto itemDto = new ItemDto();
         itemDto.setName(item.getName());
         itemDto.setDescription(item.getDescription());
-        itemDto.setIsAvailable(item.getIsAvailable());
+        itemDto.setAvailable(item.getAvailable());
         Optional.ofNullable(item.getId()).ifPresent(itemDto::setId);
         Optional.ofNullable(item.getOwnerId()).ifPresent(itemDto::setOwnerId);
         Optional.ofNullable(item.getRequestId()).ifPresent(itemDto::setRequestId);
@@ -27,7 +27,7 @@ public class ItemMapper {
         Item item = new Item();
         item.setName(itemDto.getName());
         item.setDescription(itemDto.getDescription());
-        item.setIsAvailable(itemDto.getIsAvailable());
+        item.setAvailable(itemDto.getAvailable());
         Optional.ofNullable(itemDto.getId()).ifPresent(item::setId);
         Optional.ofNullable(itemDto.getOwnerId()).ifPresent(item::setOwnerId);
         Optional.ofNullable(itemDto.getRequestId()).ifPresent(item::setRequestId);

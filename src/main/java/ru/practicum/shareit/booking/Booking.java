@@ -23,9 +23,12 @@ public class Booking {
     @Column(name = "item_id")
     private Long itemId;
 
+    @Column(name = "item_name")
+    private String itemName;
+
     @Column(name = "booker_id")
     private Long bookerId;
 
     @Enumerated(EnumType.STRING)
-    private BookingState state;
+    private BookingStatus status;
 }

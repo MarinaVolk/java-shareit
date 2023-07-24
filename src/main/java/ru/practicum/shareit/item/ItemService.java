@@ -18,4 +18,6 @@ public interface ItemService {
     CommentDto addComment(Comment comment, Long itemId, Long authorId);
 
     List<Comment> getCommentsByItemId(Long itemId);
+
+    Boolean itemExistsById(Long itemId);
 }
