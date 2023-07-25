@@ -1,5 +1,7 @@
 package ru.practicum.shareit.booking;
 
+import ru.practicum.shareit.item.ItemDtoForGet;
+
 import java.util.List;
 
 public interface BookingService {
@@ -22,4 +24,8 @@ public interface BookingService {
     List<BookingDto> getAllBookingsByBookerIdDesc(Long bookerId, String status);
 
     List<BookingDto> getAllBookingsByItemOwnerId(Long ownerId, String status);
+
+    ItemDtoForGet setLastAndNextBooking(ItemDtoForGet itemDtoForGet);
+
+    Boolean bookingExists(Long bookingId);
 }

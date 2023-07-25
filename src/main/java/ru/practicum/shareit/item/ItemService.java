@@ -20,4 +20,6 @@ public interface ItemService {
     List<Comment> getCommentsByItemId(Long itemId);
 
     Boolean itemExistsById(Long itemId);
+
+    ItemDtoForGet getItemByIdAndUserId(Long itemId, Long userId);
 }

@@ -3,8 +3,15 @@ package ru.practicum.shareit.item;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;
+import ru.practicum.shareit.booking.Booking;
+import ru.practicum.shareit.booking.BookingService;
+import ru.practicum.shareit.exception.NotFoundException;
+import ru.practicum.shareit.exception.ValidationException;
 
+import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 @RestController
 @RequestMapping("/items")
@@ -12,6 +19,7 @@ import java.util.List;
 @RequiredArgsConstructor
 public class ItemController {
     private final ItemService itemService;
+    private final BookingService bookingService;
 
     @PostMapping
     public ItemDto addItem(@RequestHeader("X-Sharer-User-Id") Long userId,
@@ -28,16 +36,44 @@ public class ItemController {
         return itemService.updateItem(userId, itemDto, itemId);
     }
 
-    @GetMapping("/{itemId}")
+    /*@GetMapping("/{itemId}")
     public ItemDto getItemById(@PathVariable Long itemId) {
         log.info("ItemController: запрос на получение данных о вещи с id={} ", itemId);
         return itemService.getItemById(itemId);
+    } */
+
+    @GetMapping("/{itemId}")
+    public ItemDtoForGet getItemById(@RequestHeader("X-Sharer-User-Id") Long userId,
+                                     @PathVariable Long itemId) {
+        log.info("ItemController: запрос на получение данных о вещи с id={} ", itemId);
+
+        ItemDto itemDto = itemService.getItemById(itemId);
+        ItemDtoForGet itemDtoForGet = itemService.getItemByIdAndUserId(itemId, userId);
+
+        if (!itemDto.getOwnerId().equals(userId)) {
+            itemDtoForGet.setLastBooking(null);
+            itemDtoForGet.setNextBooking(null);
+        } else {
+            if (bookingService.bookingExists(itemId)) {
+                bookingService.setLastAndNextBooking(itemDtoForGet);
+            }
+        }
+        return itemDtoForGet;
     }
 
     @GetMapping
-    public List<ItemDto> getItemsListByOwnerId(@RequestHeader(value = "X-Sharer-User-Id", required = false, defaultValue = "null") Long userId) {
+    public List<ItemDtoForGet> getItemsListByOwnerId(@RequestHeader(value = "X-Sharer-User-Id", required = false, defaultValue = "null") Long userId) {
         log.info("ItemController.getItemsListByOwnerId: Получен запрос на список вещей пользователя с id={}", userId);
-        return itemService.getItemsListByOwnerId(userId);
+
+        List<ItemDto> itemsList = itemService.getItemsListByOwnerId(userId);
+        List<ItemDtoForGet> itemsForGet = new ArrayList<>();
+
+        for (ItemDto itemDto: itemsList) {
+            ItemDtoForGet itemDtoForGet = itemService.getItemByIdAndUserId(itemDto.getId(), userId);
+            bookingService.setLastAndNextBooking(itemDtoForGet);
+            itemsForGet.add(itemDtoForGet);
+        }
+        return itemsForGet;
     }
 
     @GetMapping("/search")
@@ -52,6 +88,17 @@ public class ItemController {
                                        @RequestBody Comment comment) {
 
         log.info("ItemController: запрос на добавление комментария к вещи с id={}", itemId);
+
+        Optional<Booking> booking = bookingService.getBookingsByItemId(itemId).stream()
+                .filter(x -> x.getEnd().isBefore(LocalDateTime.now()))
+                .filter(x -> x.getBookerId().equals(authorId))
+                .findFirst();
+
+        if (booking.isEmpty()) {
+            throw new ValidationException("Пользователь не брал вещь в аренду.");
+        }
+
+
         return itemService.addComment(comment, itemId, authorId);
     }
 

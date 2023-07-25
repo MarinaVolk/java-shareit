@@ -5,13 +5,19 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
+import ru.practicum.shareit.booking.Booking;
+import ru.practicum.shareit.booking.BookingService;
 import ru.practicum.shareit.exception.IncorrectOwnerId;
 import ru.practicum.shareit.exception.NotFoundException;
 import ru.practicum.shareit.exception.ValidationException;
+import ru.practicum.shareit.user.User;
 import ru.practicum.shareit.user.UserRepository;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 /**
@@ -59,6 +65,7 @@ public class ItemServiceImpl implements ItemService {
         return ItemMapper.toDto(item);
     }
 
+
     @Override
     public ItemDto getItemById(Long itemId) {
         if (!itemRepository.existsById(itemId)) {
@@ -68,6 +75,30 @@ public class ItemServiceImpl implements ItemService {
         Item item = itemRepository.getReferenceById(itemId);
         return ItemMapper.toDto(item);
     }
+
+    @Override
+    public ItemDtoForGet getItemByIdAndUserId(Long itemId, Long userId) {
+        ItemDto itemDto = getItemById(itemId);
+        ItemDtoForGet itemDtoForGet = ItemMapper.toDtoForGet(itemDto);
+
+        List<Comment> comments = getCommentsByItemId(itemId);
+        List<CommentDto> commentDtos = new ArrayList<>();
+
+        for (Comment comment: comments) {
+            Long authorId = comment.getAuthorId();
+            User author = userRepository.getReferenceById(authorId);
+            String authorName = author.getName();
+            CommentDto commentDto = CommentMapper.toDto(comment);
+            commentDto.setAuthorName(authorName);
+            commentDtos.add(commentDto);
+        }
+        itemDtoForGet.setComments(commentDtos);
+
+        return itemDtoForGet;
+
+    }
+
+
 
     @Override
     public List<ItemDto> getItemsListByOwnerId(Long userId) {
@@ -98,10 +129,22 @@ public class ItemServiceImpl implements ItemService {
             throw new ValidationException("Текст комментария пустой.");
         }
 
+        /*
+        if (!itemExistsById(itemId)) {
+            throw new NotFoundException("Такой вещи в базе нет.");
+        }*/
+
         comment.setItemId(itemId);
         comment.setAuthorId(authorId);
         comment = commentRepository.save(comment);
-        return CommentMapper.toDto(comment);
+
+        User author = userRepository.getReferenceById(authorId);
+        String authorName = author.getName();
+
+        CommentDto commentDto = CommentMapper.toDto(comment);
+        commentDto.setAuthorName(authorName);
+
+        return commentDto;
     }
 
     @Override
@@ -142,5 +185,8 @@ public class ItemServiceImpl implements ItemService {
         }
         return item;
     }
+
+
+
 
 }

@@ -33,4 +33,17 @@ public class ItemMapper {
         Optional.ofNullable(itemDto.getRequestId()).ifPresent(item::setRequestId);
         return item;
     }
+
+    public static ItemDtoForGet toDtoForGet(ItemDto itemDto) {
+
+        ItemDtoForGet itemDtoForGetItems = new ItemDtoForGet();
+
+        itemDtoForGetItems.setId(itemDto.getId());
+        itemDtoForGetItems.setName(itemDto.getName());
+        itemDtoForGetItems.setDescription(itemDto.getDescription());
+        itemDtoForGetItems.setAvailable(itemDto.getAvailable());
+        //itemDtoForGetItems.setComments(itemDto);
+        return itemDtoForGetItems;
+    }
+
 }

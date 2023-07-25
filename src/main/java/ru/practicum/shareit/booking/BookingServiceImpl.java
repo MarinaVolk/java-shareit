@@ -4,9 +4,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import ru.practicum.shareit.exception.*;
-import ru.practicum.shareit.item.Item;
-import ru.practicum.shareit.item.ItemDto;
-import ru.practicum.shareit.item.ItemService;
+import ru.practicum.shareit.item.*;
 import ru.practicum.shareit.user.UserMapper;
 import ru.practicum.shareit.user.UserService;
 
@@ -15,6 +13,7 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 /**
@@ -36,23 +35,27 @@ public class BookingServiceImpl implements BookingService {
     @Override
     public BookingDto addBooking(Booking booking, Long bookerId) {
 
-        Booking bookingCheck = bookingRepository.findByBookerIdAndItemId(bookerId, booking.getItemId());
-        if (bookingCheck != null && bookingCheck.getStatus() == BookingStatus.REJECTED) {
-            throw new ValidationException("Повторное бронирование делать нельзя");
-        }
-
-        if (!itemService.getItemById(booking.getItemId()).getAvailable()) {
-            throw new ValidationException("Вещь недоступна для бронирования.");
-        }
+        //Booking bookingCheck = bookingRepository.findByBookerIdAndItemId(bookerId, booking.getItemId());
 
         if (!userService.userExistsById(bookerId)) {
             throw new UserEmailAlreadyUsedException("Такого пользователя не существует.");
         }
 
         if (!itemService.itemExistsById(booking.getItemId())) {
-            throw new UserEmailAlreadyUsedException("Такой вещи в базе нет.");
+            throw new NotFoundException("Такой вещи в базе нет.");
         }
 
+        if (!itemService.getItemById(booking.getItemId()).getAvailable()) {
+            throw new ValidationException("Вещь недоступна для бронирования.");
+        }
+
+        /*if (bookingCheck != null && bookingCheck.getStatus() == BookingStatus.REJECTED) {
+            throw new ValidationException("Повторное бронирование делать нельзя");
+        }*/
+
+        if (itemService.getItemById(booking.getItemId()).getOwnerId().equals(bookerId)) {
+            throw new NotFoundException("Владелец не может бронировать свою вещь.");
+        }
 
         booking.setBookerId(bookerId);
         booking.setStatus(BookingStatus.WAITING);
@@ -112,6 +115,16 @@ public class BookingServiceImpl implements BookingService {
     @Override
     public List<Booking> getBookingsByItemId(Long itemId) {
         return bookingRepository.findByItemId(itemId);
+    }
+
+    @Override
+    public Boolean bookingExists(Long itemId) {
+        List<Booking> bookings = getBookingsByItemId(itemId);
+        if (!bookings.isEmpty()) {
+            return true;
+        } else {
+            return false;
+        }
     }
 
     @Override
@@ -237,5 +250,61 @@ public class BookingServiceImpl implements BookingService {
                 throw new UnSupportedStatusException("Unknown state: " + status);
         }
     }
+
+    public ItemDtoForGet setLastAndNextBooking(ItemDtoForGet itemDtoForGet) {
+
+        Comparator<Booking> endComparator = (o1, o2) -> {
+            if (o1.getEnd().isBefore(o2.getEnd())) {
+                return -1;
+            } else if (o2.getEnd().isBefore(o1.getEnd())) {
+                return 1;
+            } else {
+                return 0;
+            }
+        };
+
+        Comparator<Booking> startComparator = (o1, o2) -> {
+            if (o1.getStart().isBefore(o2.getStart())) {
+                return 1;
+            } else if (o1.getStart().isAfter(o2.getStart())) {
+                return -1;
+            } else {
+                return 0;
+            }
+        };
+
+        List<Booking> bookings = getBookingsByItemId(itemDtoForGet.getId());
+
+        Optional<Booking> lastBooking = bookings.stream()
+                .sorted(endComparator)
+                .filter(x -> x.getEnd().isBefore(LocalDateTime.now().plusHours(1)))
+                .filter(x -> !x.getStatus().equals(BookingStatus.REJECTED))
+                .max(endComparator); // changed findFirst()
+
+        BookingForItem lastBookingForItem = new BookingForItem();
+
+        if (lastBooking.isPresent()) {
+            lastBookingForItem.setId(lastBooking.get().getId());
+            lastBookingForItem.setBookerId(lastBooking.get().getBookerId());
+            itemDtoForGet.setLastBooking(lastBookingForItem);
+        }
+
+//        bookings = getBookingsByItemId(itemDtoForGet.getId());
+
+        Optional<Booking> nextBooking = bookings.stream()
+                .filter(x -> x.getStart().isAfter(LocalDateTime.now()))
+                .filter(x -> !x.getStatus().equals(BookingStatus.REJECTED))
+                .min(endComparator);
+
+        BookingForItem nextBookingForItem = new BookingForItem();
+
+        if (nextBooking.isPresent()) {
+            nextBookingForItem.setId(nextBooking.get().getId());
+            nextBookingForItem.setBookerId(nextBooking.get().getBookerId());
+            itemDtoForGet.setNextBooking(nextBookingForItem);
+        }
+        return itemDtoForGet;
+    }
+
 
 }
