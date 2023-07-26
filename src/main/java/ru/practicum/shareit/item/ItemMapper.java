@@ -42,7 +42,6 @@ public class ItemMapper {
         itemDtoForGetItems.setName(itemDto.getName());
         itemDtoForGetItems.setDescription(itemDto.getDescription());
         itemDtoForGetItems.setAvailable(itemDto.getAvailable());
-        //itemDtoForGetItems.setComments(itemDto);
         return itemDtoForGetItems;
     }
 

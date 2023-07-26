@@ -1,7 +1,5 @@
 package ru.practicum.shareit.item;
 
-import ru.practicum.shareit.item.ItemDto;
-
 import java.util.List;
 
 public interface ItemService {
@@ -21,5 +19,5 @@ public interface ItemService {
 
     Boolean itemExistsById(Long itemId);
 
-    ItemDtoForGet getItemByIdAndUserId(Long itemId, Long userId);
+    ItemDtoForGet getItemByIdForGet(Long itemId);
 }

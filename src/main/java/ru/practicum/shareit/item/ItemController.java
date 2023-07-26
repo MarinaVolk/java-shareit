@@ -5,7 +5,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;
 import ru.practicum.shareit.booking.Booking;
 import ru.practicum.shareit.booking.BookingService;
-import ru.practicum.shareit.exception.NotFoundException;
 import ru.practicum.shareit.exception.ValidationException;
 
 import java.time.LocalDateTime;
@@ -36,19 +35,13 @@ public class ItemController {
         return itemService.updateItem(userId, itemDto, itemId);
     }
 
-    /*@GetMapping("/{itemId}")
-    public ItemDto getItemById(@PathVariable Long itemId) {
-        log.info("ItemController: запрос на получение данных о вещи с id={} ", itemId);
-        return itemService.getItemById(itemId);
-    } */
-
     @GetMapping("/{itemId}")
     public ItemDtoForGet getItemById(@RequestHeader("X-Sharer-User-Id") Long userId,
                                      @PathVariable Long itemId) {
         log.info("ItemController: запрос на получение данных о вещи с id={} ", itemId);
 
         ItemDto itemDto = itemService.getItemById(itemId);
-        ItemDtoForGet itemDtoForGet = itemService.getItemByIdAndUserId(itemId, userId);
+        ItemDtoForGet itemDtoForGet = itemService.getItemByIdForGet(itemId);
 
         if (!itemDto.getOwnerId().equals(userId)) {
             itemDtoForGet.setLastBooking(null);
@@ -68,8 +61,8 @@ public class ItemController {
         List<ItemDto> itemsList = itemService.getItemsListByOwnerId(userId);
         List<ItemDtoForGet> itemsForGet = new ArrayList<>();
 
-        for (ItemDto itemDto: itemsList) {
-            ItemDtoForGet itemDtoForGet = itemService.getItemByIdAndUserId(itemDto.getId(), userId);
+        for (ItemDto itemDto : itemsList) {
+            ItemDtoForGet itemDtoForGet = itemService.getItemByIdForGet(itemDto.getId());
             bookingService.setLastAndNextBooking(itemDtoForGet);
             itemsForGet.add(itemDtoForGet);
         }
@@ -97,8 +90,6 @@ public class ItemController {
         if (booking.isEmpty()) {
             throw new ValidationException("Пользователь не брал вещь в аренду.");
         }
-
-
         return itemService.addComment(comment, itemId, authorId);
     }
 

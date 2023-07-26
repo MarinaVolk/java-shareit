@@ -5,10 +5,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import ru.practicum.shareit.exception.*;
 import ru.practicum.shareit.item.*;
-import ru.practicum.shareit.user.UserMapper;
 import ru.practicum.shareit.user.UserService;
 
-import javax.validation.ConstraintViolationException;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -35,8 +33,6 @@ public class BookingServiceImpl implements BookingService {
     @Override
     public BookingDto addBooking(Booking booking, Long bookerId) {
 
-        //Booking bookingCheck = bookingRepository.findByBookerIdAndItemId(bookerId, booking.getItemId());
-
         if (!userService.userExistsById(bookerId)) {
             throw new UserEmailAlreadyUsedException("Такого пользователя не существует.");
         }
@@ -49,10 +45,6 @@ public class BookingServiceImpl implements BookingService {
             throw new ValidationException("Вещь недоступна для бронирования.");
         }
 
-        /*if (bookingCheck != null && bookingCheck.getStatus() == BookingStatus.REJECTED) {
-            throw new ValidationException("Повторное бронирование делать нельзя");
-        }*/
-
         if (itemService.getItemById(booking.getItemId()).getOwnerId().equals(bookerId)) {
             throw new NotFoundException("Владелец не может бронировать свою вещь.");
         }
@@ -62,7 +54,6 @@ public class BookingServiceImpl implements BookingService {
 
         bookingValidator.isValid(booking);
 
-        // wrong user id exception
         booking = bookingRepository.save(booking);
         BookingDto bookingDto = bookingMapper.toDto(booking);
         bookingDto.getItem().setName(itemService.getItemById(bookingDto.getItem().getId()).getName());
@@ -276,10 +267,9 @@ public class BookingServiceImpl implements BookingService {
         List<Booking> bookings = getBookingsByItemId(itemDtoForGet.getId());
 
         Optional<Booking> lastBooking = bookings.stream()
-                .sorted(endComparator)
                 .filter(x -> x.getEnd().isBefore(LocalDateTime.now().plusHours(1)))
                 .filter(x -> !x.getStatus().equals(BookingStatus.REJECTED))
-                .max(endComparator); // changed findFirst()
+                .max(endComparator);
 
         BookingForItem lastBookingForItem = new BookingForItem();
 
@@ -288,8 +278,6 @@ public class BookingServiceImpl implements BookingService {
             lastBookingForItem.setBookerId(lastBooking.get().getBookerId());
             itemDtoForGet.setLastBooking(lastBookingForItem);
         }
-
-//        bookings = getBookingsByItemId(itemDtoForGet.getId());
 
         Optional<Booking> nextBooking = bookings.stream()
                 .filter(x -> x.getStart().isAfter(LocalDateTime.now()))

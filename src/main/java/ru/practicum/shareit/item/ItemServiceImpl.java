@@ -2,22 +2,16 @@ package ru.practicum.shareit.item;/* # parse("File Header.java")*/
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
-import ru.practicum.shareit.booking.Booking;
-import ru.practicum.shareit.booking.BookingService;
 import ru.practicum.shareit.exception.IncorrectOwnerId;
 import ru.practicum.shareit.exception.NotFoundException;
 import ru.practicum.shareit.exception.ValidationException;
 import ru.practicum.shareit.user.User;
 import ru.practicum.shareit.user.UserRepository;
 
-import java.time.LocalDateTime;
 import java.util.ArrayList;
-import java.util.Comparator;
 import java.util.List;
-import java.util.Optional;
 import java.util.stream.Collectors;
 
 /**
@@ -40,7 +34,7 @@ public class ItemServiceImpl implements ItemService {
         Item item = ItemMapper.fromDto(itemDto);
 
         validator.isValid(item);
-        if /*(userRepository.getUserById(userId) == null)*/ (!userRepository.existsById(userId)) {
+        if (!userRepository.existsById(userId)) {
             throw new NotFoundException("Такого пользователя в базе нет.");
         }
         item.setOwnerId(userId);
@@ -77,14 +71,14 @@ public class ItemServiceImpl implements ItemService {
     }
 
     @Override
-    public ItemDtoForGet getItemByIdAndUserId(Long itemId, Long userId) {
+    public ItemDtoForGet getItemByIdForGet(Long itemId) {
         ItemDto itemDto = getItemById(itemId);
         ItemDtoForGet itemDtoForGet = ItemMapper.toDtoForGet(itemDto);
 
         List<Comment> comments = getCommentsByItemId(itemId);
         List<CommentDto> commentDtos = new ArrayList<>();
 
-        for (Comment comment: comments) {
+        for (Comment comment : comments) {
             Long authorId = comment.getAuthorId();
             User author = userRepository.getReferenceById(authorId);
             String authorName = author.getName();
@@ -95,9 +89,7 @@ public class ItemServiceImpl implements ItemService {
         itemDtoForGet.setComments(commentDtos);
 
         return itemDtoForGet;
-
     }
-
 
 
     @Override
@@ -128,11 +120,6 @@ public class ItemServiceImpl implements ItemService {
         if (!StringUtils.hasText(comment.getText())) {
             throw new ValidationException("Текст комментария пустой.");
         }
-
-        /*
-        if (!itemExistsById(itemId)) {
-            throw new NotFoundException("Такой вещи в базе нет.");
-        }*/
 
         comment.setItemId(itemId);
         comment.setAuthorId(authorId);
@@ -185,8 +172,5 @@ public class ItemServiceImpl implements ItemService {
         }
         return item;
     }
-
-
-
 
 }
