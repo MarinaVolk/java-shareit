@@ -1,4 +1,4 @@
-package ru.practicum.shareit.item;/* # parse("File Header.java")*/
+package ru.practicum.shareit.item.comments;/* # parse("File Header.java")*/
 
 import org.springframework.stereotype.Component;
 
@@ -17,7 +17,7 @@ public class CommentMapper {
         CommentDto commentDto = new CommentDto();
         commentDto.setCreated(comment.getCreated());
         commentDto.setText(comment.getText());
-        commentDto.setAuthorId(comment.getAuthorId());
+        commentDto.setAuthorId(comment.getAuthor().getId());
         Optional.ofNullable(comment.getId()).ifPresent(commentDto::setId);
 
         return commentDto;

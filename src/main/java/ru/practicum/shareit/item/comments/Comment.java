@@ -1,6 +1,8 @@
-package ru.practicum.shareit.item;/* # parse("File Header.java")*/
+package ru.practicum.shareit.item.comments;/* # parse("File Header.java")*/
 
 import lombok.Data;
+import ru.practicum.shareit.item.Item;
+import ru.practicum.shareit.user.User;
 
 import javax.persistence.*;
 import java.time.LocalDateTime;
@@ -21,11 +23,11 @@ public class Comment {
 
     private String text;
 
-    @Column(name = "item_id")
-    private Long itemId;
+    @ManyToOne
+    private Item item;
 
-    @Column(name = "author_id")
-    private Long authorId;
+    @ManyToOne
+    private User author;
 
     private LocalDateTime created = LocalDateTime.now();
 

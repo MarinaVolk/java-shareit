@@ -5,6 +5,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import ru.practicum.shareit.exception.*;
 import ru.practicum.shareit.item.*;
+import ru.practicum.shareit.user.UserDto;
+import ru.practicum.shareit.user.UserRepository;
 import ru.practicum.shareit.user.UserService;
 
 import java.time.LocalDateTime;
@@ -25,53 +27,50 @@ import java.util.stream.Collectors;
 @Slf4j
 public class BookingServiceImpl implements BookingService {
     private final BookingRepository bookingRepository;
-    private final BookingMapper bookingMapper;
     private final BookingValidator bookingValidator;
+    private final UserRepository userRepository;
     private final ItemService itemService;
     private final UserService userService;
 
     @Override
-    public BookingDto addBooking(Booking booking, Long bookerId) {
+    public BookingDto addBooking(BookingDto booking, Long bookerId) {
+        UserDto booker = userService.getUserById(bookerId);
+        ItemDto item = itemService.getItemById(booking.getItemId());
 
-        if (!userService.userExistsById(bookerId)) {
-            throw new UserEmailAlreadyUsedException("Такого пользователя не существует.");
-        }
-
-        if (!itemService.itemExistsById(booking.getItemId())) {
-            throw new NotFoundException("Такой вещи в базе нет.");
-        }
-
-        if (!itemService.getItemById(booking.getItemId()).getAvailable()) {
+        if (!item.getAvailable()) {
             throw new ValidationException("Вещь недоступна для бронирования.");
         }
 
-        if (itemService.getItemById(booking.getItemId()).getOwnerId().equals(bookerId)) {
+        if (item.getOwnerId().equals(bookerId)) {
             throw new NotFoundException("Владелец не может бронировать свою вещь.");
         }
-
-        booking.setBookerId(bookerId);
-        booking.setStatus(BookingStatus.WAITING);
-
         bookingValidator.isValid(booking);
 
-        booking = bookingRepository.save(booking);
-        BookingDto bookingDto = bookingMapper.toDto(booking);
-        bookingDto.getItem().setName(itemService.getItemById(bookingDto.getItem().getId()).getName());
+        booking.setBooker(booker);
+        booking.setStatus(BookingStatus.WAITING);
 
-        return bookingDto;
+        ItemForResponseDto itemForResponseDto = new ItemForResponseDto(item.getId());
+        itemForResponseDto.setName(item.getName());
+        booking.setItem(itemForResponseDto);
+
+        Booking bookingForRepository = BookingMapper.fromDto(booking);
+        booking = BookingMapper.toDto(bookingRepository.save(bookingForRepository));
+        return booking;
     }
 
     @Override
     public BookingDto getBookingByIdAndBookerId(Long bookingId, Long bookerId) {
         BookingDto bookingDto = getBookingById(bookingId);
 
+        ItemDto item = itemService.getItemById(bookingDto.getItem().getId());
+
         if (!bookingDto.getBooker().getId().equals(bookerId)
-                && !itemService.getItemById(bookingDto.getItem().getId()).getOwnerId().equals(bookerId)) {
+                && !item.getOwnerId().equals(bookerId)) {
             log.error("Бронирование может получить только его создатель "
                     + "или владелец вещи для бронирования.");
             throw new IncorrectOwnerId("Нет прав доступа к бронированию.");
         }
-        bookingDto.getItem().setName(itemService.getItemById(bookingDto.getItem().getId()).getName());
+        bookingDto.getItem().setName(item.getName());
         return bookingDto;
     }
 
@@ -82,35 +81,49 @@ public class BookingServiceImpl implements BookingService {
             log.error("BookingService: Бронирования с id={} не существует", bookingId);
             throw new NotFoundException("Такого бронирования в базе нет.");
         }
-        BookingDto bookingDto = bookingMapper.toDto(bookingRepository.getReferenceById(bookingId));
+        BookingDto bookingDto = BookingMapper.toDto(bookingRepository.getReferenceById(bookingId));
         bookingDto.getItem().setName(itemService.getItemById(bookingDto.getItem().getId()).getName());
         return bookingDto;
     }
 
     @Override
     public BookingDto updateBookingStatus(BookingDto bookingDto) {
-        return bookingMapper.toDto(bookingRepository.save(bookingMapper.fromDto(bookingDto)));
+        return BookingMapper.toDto(bookingRepository.save(BookingMapper.fromDto(bookingDto)));
     }
 
     @Override
     public List<BookingDto> getBookingsByBookerId(Long bookerId) {
-        return bookingRepository.findByBookerId(bookerId).stream()
-                .map(bookingMapper::toDto).collect(Collectors.toList());
+        List<Booking> bookings = bookingRepository.findByBookerId(bookerId);
+        List<BookingDto> bookingDtos = new ArrayList<>();
+        for (Booking booking : bookings) {
+            bookingDtos.add(BookingMapper.toDto(booking));
+        }
+        return bookingDtos;
     }
 
     @Override
     public List<BookingDto> getBookingsByIdItemsList(List<Long> itemsId) {
-        return bookingRepository.findByItemIdIn(itemsId).stream().map(bookingMapper::toDto).collect(Collectors.toList());
+        List<Booking> bookings = bookingRepository.findByItemIdIn(itemsId);
+        List<BookingDto> bookingDtos = new ArrayList<>();
+        for (Booking booking : bookings) {
+            bookingDtos.add(BookingMapper.toDto(booking));
+        }
+        return bookingDtos;
     }
 
     @Override
-    public List<Booking> getBookingsByItemId(Long itemId) {
-        return bookingRepository.findByItemId(itemId);
+    public List<BookingDto> getBookingsByItemId(Long itemId) {
+        List<Booking> bookings = bookingRepository.findByItemId(itemId);
+        List<BookingDto> bookingDtos = new ArrayList<>();
+        for (Booking booking : bookings) {
+            bookingDtos.add(BookingMapper.toDto(booking));
+        }
+        return bookingDtos;
     }
 
     @Override
     public Boolean bookingExists(Long itemId) {
-        List<Booking> bookings = getBookingsByItemId(itemId);
+        List<BookingDto> bookings = getBookingsByItemId(itemId);
         if (!bookings.isEmpty()) {
             return true;
         } else {
@@ -120,30 +133,22 @@ public class BookingServiceImpl implements BookingService {
 
     @Override
     public BookingDto approveBooking(Long ownerId, Long bookingId, Boolean approved) {
-        BookingDto bookingDto = getBookingById(bookingId);
+        if (!userRepository.existsById(ownerId)) {
+            throw new NotFoundException("Не найден пользователь с id " + ownerId);
+        }
+        Booking booking = bookingRepository.findById(bookingId)
+                .orElseThrow(() -> new NotFoundException("Не найдено бронирование с id " + bookingId));
 
-        if (!itemService.getItemById(bookingDto.getItem().getId()).getOwnerId().equals(ownerId)) {
-            log.error("Подтвердить или отклонить бронирование может только владелец, "
-                    + "пользователь с id={} не владеет вещью с id={}", ownerId, bookingId);
-            throw new NotFoundException("Нет прав доступа к бронированию");
+        if (!booking.getItem().getOwner().getId().equals(ownerId)) {
+            throw new NotFoundException("Пользователь с id " + ownerId +
+                    " не является владельцем вещи с id " + booking.getItem().getId());
         }
 
-        if (!bookingDto.getStatus().equals(BookingStatus.WAITING)) {
-            log.error("Статус бронирования {} с id={} уже был изменён владельцем вещи.",
-                    bookingDto.getStatus(), bookingId);
-            throw new ValidationException("Запрос уже был обработан владельцем вещи");
+        if (booking.getStatus().equals(BookingStatus.APPROVED)) {
+            throw new ValidationException("Нельзя изменить статус подтвержденного бронирования");
         }
-
-        if (approved) {
-            bookingDto.setStatus(BookingStatus.APPROVED);
-        } else {
-            bookingDto.setStatus(BookingStatus.REJECTED);
-        }
-
-        bookingDto = updateBookingStatus(bookingDto);
-
-        bookingDto.getItem().setName(itemService.getItemById(bookingDto.getItem().getId()).getName());
-        return bookingDto;
+        booking.setStatus(approved ? BookingStatus.APPROVED : BookingStatus.REJECTED);
+        return BookingMapper.toDto(bookingRepository.save(booking));
     }
 
     @Override
@@ -244,7 +249,7 @@ public class BookingServiceImpl implements BookingService {
 
     public ItemDtoForGet setLastAndNextBooking(ItemDtoForGet itemDtoForGet) {
 
-        Comparator<Booking> endComparator = (o1, o2) -> {
+        Comparator<BookingDto> endComparator = (o1, o2) -> {
             if (o1.getEnd().isBefore(o2.getEnd())) {
                 return -1;
             } else if (o2.getEnd().isBefore(o1.getEnd())) {
@@ -254,7 +259,7 @@ public class BookingServiceImpl implements BookingService {
             }
         };
 
-        Comparator<Booking> startComparator = (o1, o2) -> {
+        Comparator<BookingDto> startComparator = (o1, o2) -> {
             if (o1.getStart().isBefore(o2.getStart())) {
                 return 1;
             } else if (o1.getStart().isAfter(o2.getStart())) {
@@ -264,9 +269,9 @@ public class BookingServiceImpl implements BookingService {
             }
         };
 
-        List<Booking> bookings = getBookingsByItemId(itemDtoForGet.getId());
+        List<BookingDto> bookings = getBookingsByItemId(itemDtoForGet.getId());
 
-        Optional<Booking> lastBooking = bookings.stream()
+        Optional<BookingDto> lastBooking = bookings.stream()
                 .filter(x -> x.getEnd().isBefore(LocalDateTime.now().plusHours(1)))
                 .filter(x -> !x.getStatus().equals(BookingStatus.REJECTED))
                 .max(endComparator);
@@ -275,11 +280,11 @@ public class BookingServiceImpl implements BookingService {
 
         if (lastBooking.isPresent()) {
             lastBookingForItem.setId(lastBooking.get().getId());
-            lastBookingForItem.setBookerId(lastBooking.get().getBookerId());
+            lastBookingForItem.setBookerId(lastBooking.get().getBooker().getId());
             itemDtoForGet.setLastBooking(lastBookingForItem);
         }
 
-        Optional<Booking> nextBooking = bookings.stream()
+        Optional<BookingDto> nextBooking = bookings.stream()
                 .filter(x -> x.getStart().isAfter(LocalDateTime.now()))
                 .filter(x -> !x.getStatus().equals(BookingStatus.REJECTED))
                 .min(endComparator);
@@ -288,11 +293,10 @@ public class BookingServiceImpl implements BookingService {
 
         if (nextBooking.isPresent()) {
             nextBookingForItem.setId(nextBooking.get().getId());
-            nextBookingForItem.setBookerId(nextBooking.get().getBookerId());
+            nextBookingForItem.setBookerId(nextBooking.get().getBooker().getId());
             itemDtoForGet.setNextBooking(nextBookingForItem);
         }
         return itemDtoForGet;
     }
-
 
 }

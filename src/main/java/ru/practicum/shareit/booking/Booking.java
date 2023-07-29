@@ -1,6 +1,8 @@
 package ru.practicum.shareit.booking;
 
 import lombok.Data;
+import ru.practicum.shareit.item.Item;
+import ru.practicum.shareit.user.User;
 
 import javax.persistence.*;
 import java.time.LocalDateTime;
@@ -20,14 +22,11 @@ public class Booking {
     @Column(name = "end_date")
     private LocalDateTime end;
 
-    @Column(name = "item_id")
-    private Long itemId;
+    @ManyToOne(cascade = CascadeType.MERGE)
+    private Item item;
 
-    @Column(name = "item_name")
-    private String itemName;
-
-    @Column(name = "booker_id")
-    private Long bookerId;
+    @ManyToOne(cascade = CascadeType.MERGE)
+    private User booker;
 
     @Enumerated(EnumType.STRING)
     private BookingStatus status;

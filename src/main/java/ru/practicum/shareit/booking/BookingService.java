@@ -5,7 +5,7 @@ import ru.practicum.shareit.item.ItemDtoForGet;
 import java.util.List;
 
 public interface BookingService {
-    BookingDto addBooking(Booking booking, Long bookerId);
+    BookingDto addBooking(BookingDto booking, Long bookerId);
 
     BookingDto getBookingById(Long bookingId);
 
@@ -17,7 +17,7 @@ public interface BookingService {
 
     List<BookingDto> getBookingsByIdItemsList(List<Long> itemsId);
 
-    List<Booking> getBookingsByItemId(Long itemId);
+    List<BookingDto> getBookingsByItemId(Long itemId);
 
     BookingDto approveBooking(Long ownerId, Long bookingId, Boolean approved);
 

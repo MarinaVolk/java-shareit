@@ -1,6 +1,8 @@
 package ru.practicum.shareit.booking;/* # parse("File Header.java")*/
 
 import org.springframework.stereotype.Component;
+import ru.practicum.shareit.item.Item;
+import ru.practicum.shareit.user.UserMapper;
 
 import java.util.Optional;
 
@@ -12,26 +14,36 @@ import java.util.Optional;
  */
 @Component
 public class BookingMapper {
-    public BookingDto toDto(Booking booking) {
+    public static BookingDto toDto(Booking booking) {
         BookingDto bookingDto = new BookingDto();
         bookingDto.setStatus(booking.getStatus());
         bookingDto.setStart(booking.getStart());
         bookingDto.setEnd(booking.getEnd());
-        bookingDto.setItem(new ItemForResponse(booking.getItemId()));
-        bookingDto.setBooker(new Booker(booking.getBookerId()));
-        Optional.ofNullable(booking.getId()).ifPresent(bookingDto::setId);
+        bookingDto.setId(booking.getId());
+
+        ItemForResponseDto item = new ItemForResponseDto(booking.getItem().getId());
+        item.setName(booking.getItem().getName());
+        bookingDto.setItem(item);
+
+        bookingDto.setBooker(UserMapper.toDto(booking.getBooker()));
+
         return bookingDto;
     }
 
-    public Booking fromDto(BookingDto bookingDto) {
+    public static Booking fromDto(BookingDto bookingDto) {
         Booking booking = new Booking();
+        Optional.ofNullable(bookingDto.getId()).ifPresent(booking::setId);
         booking.setStart(bookingDto.getStart());
         booking.setEnd(bookingDto.getEnd());
-        booking.setBookerId(bookingDto.getBooker().getId());
-        booking.setItemId(bookingDto.getItem().getId());
-        booking.setItemName(bookingDto.getItem().getName());
         booking.setStatus(bookingDto.getStatus());
-        Optional.ofNullable(bookingDto.getId()).ifPresent(booking::setId);
+
+        Item item = new Item();
+        item.setId(bookingDto.getItem().getId());
+        item.setName(bookingDto.getItem().getName());
+        booking.setItem(item);
+
+        booking.setBooker(UserMapper.fromDto(bookingDto.getBooker()));
+
         return booking;
     }
 }

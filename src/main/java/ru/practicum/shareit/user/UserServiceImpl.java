@@ -54,6 +54,10 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public UserDto getUserById(Long userId) {
+        if (userId == null) {
+            throw new NotFoundException("Такого пользователя не существует.");
+        }
+
         if (!userExistsById(userId)) {
             log.error("Пользователя с id={} в базе нет.", userId);
             throw new NotFoundException("Пользователя с id=" + userId + " в базе нет.");

@@ -1,9 +1,9 @@
 package ru.practicum.shareit.item;
 
 import lombok.Data;
+import ru.practicum.shareit.user.User;
 
 import javax.persistence.*;
-import javax.validation.constraints.NotNull;
 
 @Data
 @Entity
@@ -20,9 +20,8 @@ public class Item {
     @Column(name = "is_available")
     private Boolean available;
 
-    @NotNull
-    @Column(name = "owner_id")
-    private Long ownerId;
+    @ManyToOne
+    private User owner;
 
     @Column(name = "request_id")
     private Long requestId;

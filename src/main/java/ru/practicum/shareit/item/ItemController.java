@@ -3,9 +3,11 @@ package ru.practicum.shareit.item;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;
-import ru.practicum.shareit.booking.Booking;
+import ru.practicum.shareit.booking.BookingDto;
 import ru.practicum.shareit.booking.BookingService;
 import ru.practicum.shareit.exception.ValidationException;
+import ru.practicum.shareit.item.comments.Comment;
+import ru.practicum.shareit.item.comments.CommentDto;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -82,9 +84,9 @@ public class ItemController {
 
         log.info("ItemController: запрос на добавление комментария к вещи с id={}", itemId);
 
-        Optional<Booking> booking = bookingService.getBookingsByItemId(itemId).stream()
+        Optional<BookingDto> booking = bookingService.getBookingsByItemId(itemId).stream()
                 .filter(x -> x.getEnd().isBefore(LocalDateTime.now()))
-                .filter(x -> x.getBookerId().equals(authorId))
+                .filter(x -> x.getBooker().getId().equals(authorId))
                 .findFirst();
 
         if (booking.isEmpty()) {

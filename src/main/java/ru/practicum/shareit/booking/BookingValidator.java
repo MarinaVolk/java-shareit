@@ -14,28 +14,28 @@ import java.time.LocalDateTime;
 @Component
 public class BookingValidator {
 
-    public void isValid(Booking booking) throws ValidationException {
+    public void isValid(BookingDto booking) throws ValidationException {
         if ((booking.getStart() == null) || (booking.getEnd() == null)) {
             throw new ValidationException("Даты начала аренды и окончания аренды должны быть заданы.");
         }
-        startValidator(booking.getStart());
-        endValidator(booking.getEnd());
-        rentDateValidator(booking.getStart(), booking.getEnd());
+        validateStart(booking.getStart());
+        validateEnd(booking.getEnd());
+        validateRent(booking.getStart(), booking.getEnd());
     }
 
-    private void startValidator(LocalDateTime start) throws ValidationException {
+    private void validateStart(LocalDateTime start) throws ValidationException {
         if (start.isBefore(LocalDateTime.now())) {
             throw new ValidationException("Дата начала аренды не может быть в прошлом.");
         }
     }
 
-    private void endValidator(LocalDateTime end) throws ValidationException {
+    private void validateEnd(LocalDateTime end) throws ValidationException {
         if (end.isBefore(LocalDateTime.now())) {
             throw new ValidationException("Дата окончания аренды не может быть в прошлом.");
         }
     }
 
-    private void rentDateValidator(LocalDateTime start, LocalDateTime end) {
+    private void validateRent(LocalDateTime start, LocalDateTime end) {
         if (start.isAfter(end) || (start.isEqual(end))) {
             throw new ValidationException("Дата начала аренды не может быть после даты окончания.");
         }

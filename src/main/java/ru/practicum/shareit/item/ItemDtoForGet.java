@@ -1,6 +1,7 @@
 package ru.practicum.shareit.item;/* # parse("File Header.java")*/
 
 import lombok.Data;
+import ru.practicum.shareit.item.comments.CommentDto;
 
 import java.util.List;
 

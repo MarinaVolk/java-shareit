@@ -7,6 +7,10 @@ import org.springframework.util.StringUtils;
 import ru.practicum.shareit.exception.IncorrectOwnerId;
 import ru.practicum.shareit.exception.NotFoundException;
 import ru.practicum.shareit.exception.ValidationException;
+import ru.practicum.shareit.item.comments.Comment;
+import ru.practicum.shareit.item.comments.CommentDto;
+import ru.practicum.shareit.item.comments.CommentMapper;
+import ru.practicum.shareit.item.comments.CommentRepository;
 import ru.practicum.shareit.user.User;
 import ru.practicum.shareit.user.UserRepository;
 
@@ -37,7 +41,7 @@ public class ItemServiceImpl implements ItemService {
         if (!userRepository.existsById(userId)) {
             throw new NotFoundException("Такого пользователя в базе нет.");
         }
-        item.setOwnerId(userId);
+        item.setOwner(userRepository.getReferenceById(userId));
         item = itemRepository.save(item);
         return ItemMapper.toDto(item);
     }
@@ -47,7 +51,7 @@ public class ItemServiceImpl implements ItemService {
         Item updateItem = ItemMapper.fromDto(itemDto);
         Item oldItem = itemRepository.getReferenceById(itemId);
 
-        if (!oldItem.getOwnerId().equals(userId)) {
+        if (!oldItem.getOwner().getId().equals(userId)) {
             log.error("ItemService: вещь с id={} не принадлежит пользователю с id={}", itemId, userId);
             throw new IncorrectOwnerId("Нельзя редактировать не принадлежащую пользователю вещь.");
         }
@@ -62,6 +66,9 @@ public class ItemServiceImpl implements ItemService {
 
     @Override
     public ItemDto getItemById(Long itemId) {
+        if (itemId == null) {
+            throw new ValidationException("Вещь не указана.");
+        }
         if (!itemRepository.existsById(itemId)) {
             log.error("ItemService: Вещи с id={} в базе нет.", itemId);
             throw new NotFoundException("Такой вещи в базе нет.");
@@ -79,7 +86,7 @@ public class ItemServiceImpl implements ItemService {
         List<CommentDto> commentDtos = new ArrayList<>();
 
         for (Comment comment : comments) {
-            Long authorId = comment.getAuthorId();
+            Long authorId = comment.getAuthor().getId();
             User author = userRepository.getReferenceById(authorId);
             String authorName = author.getName();
             CommentDto commentDto = CommentMapper.toDto(comment);
@@ -121,8 +128,8 @@ public class ItemServiceImpl implements ItemService {
             throw new ValidationException("Текст комментария пустой.");
         }
 
-        comment.setItemId(itemId);
-        comment.setAuthorId(authorId);
+        comment.setItem(itemRepository.getReferenceById(itemId));
+        comment.setAuthor(userRepository.getReferenceById(authorId));
         comment = commentRepository.save(comment);
 
         User author = userRepository.getReferenceById(authorId);
@@ -165,10 +172,10 @@ public class ItemServiceImpl implements ItemService {
             item.setAvailable(oldItem.getAvailable());
         }
 
-        if (updateItem.getOwnerId() != null) {
-            item.setOwnerId(updateItem.getOwnerId());
+        if (updateItem.getOwner() != null && updateItem.getOwner().getId() != null) {
+            item.setOwner(updateItem.getOwner());
         } else {
-            item.setOwnerId(oldItem.getOwnerId());
+            item.setOwner(oldItem.getOwner());
         }
         return item;
     }
