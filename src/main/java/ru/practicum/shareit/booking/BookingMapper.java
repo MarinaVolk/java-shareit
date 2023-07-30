@@ -2,6 +2,7 @@ package ru.practicum.shareit.booking;/* # parse("File Header.java")*/
 
 import org.springframework.stereotype.Component;
 import ru.practicum.shareit.item.Item;
+import ru.practicum.shareit.item.ItemResponseShortDto;
 import ru.practicum.shareit.user.UserMapper;
 
 import java.util.Optional;
@@ -21,7 +22,7 @@ public class BookingMapper {
         bookingDto.setEnd(booking.getEnd());
         bookingDto.setId(booking.getId());
 
-        ItemForResponseDto item = new ItemForResponseDto(booking.getItem().getId());
+        ItemResponseShortDto item = new ItemResponseShortDto(booking.getItem().getId());
         item.setName(booking.getItem().getName());
         bookingDto.setItem(item);
 

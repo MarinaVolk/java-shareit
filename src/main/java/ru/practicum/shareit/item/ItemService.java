@@ -22,5 +22,5 @@ public interface ItemService {
 
     Boolean itemExistsById(Long itemId);
 
-    ItemDtoForGet getItemByIdForGet(Long itemId);
+    ItemResponseFullDto getItemByIdForGet(Long itemId);
 }

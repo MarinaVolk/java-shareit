@@ -78,9 +78,9 @@ public class ItemServiceImpl implements ItemService {
     }
 
     @Override
-    public ItemDtoForGet getItemByIdForGet(Long itemId) {
+    public ItemResponseFullDto getItemByIdForGet(Long itemId) {
         ItemDto itemDto = getItemById(itemId);
-        ItemDtoForGet itemDtoForGet = ItemMapper.toDtoForGet(itemDto);
+        ItemResponseFullDto itemDtoForGet = ItemMapper.toDtoForGet(itemDto);
 
         List<Comment> comments = getCommentsByItemId(itemId);
         List<CommentDto> commentDtos = new ArrayList<>();

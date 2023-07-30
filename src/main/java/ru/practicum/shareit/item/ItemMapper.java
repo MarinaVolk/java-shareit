@@ -39,9 +39,9 @@ public class ItemMapper {
         return item;
     }
 
-    public static ItemDtoForGet toDtoForGet(ItemDto itemDto) {
+    public static ItemResponseFullDto toDtoForGet(ItemDto itemDto) {
 
-        ItemDtoForGet itemDtoForGetItems = new ItemDtoForGet();
+        ItemResponseFullDto itemDtoForGetItems = new ItemResponseFullDto();
 
         itemDtoForGetItems.setId(itemDto.getId());
         itemDtoForGetItems.setName(itemDto.getName());

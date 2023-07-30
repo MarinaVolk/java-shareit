@@ -22,10 +22,10 @@ public class Booking {
     @Column(name = "end_date")
     private LocalDateTime end;
 
-    @ManyToOne(cascade = CascadeType.MERGE)
+    @ManyToOne
     private Item item;
 
-    @ManyToOne(cascade = CascadeType.MERGE)
+    @ManyToOne
     private User booker;
 
     @Enumerated(EnumType.STRING)

@@ -38,12 +38,12 @@ public class ItemController {
     }
 
     @GetMapping("/{itemId}")
-    public ItemDtoForGet getItemById(@RequestHeader("X-Sharer-User-Id") Long userId,
+    public ItemResponseFullDto getItemById(@RequestHeader("X-Sharer-User-Id") Long userId,
                                      @PathVariable Long itemId) {
         log.info("ItemController: запрос на получение данных о вещи с id={} ", itemId);
 
         ItemDto itemDto = itemService.getItemById(itemId);
-        ItemDtoForGet itemDtoForGet = itemService.getItemByIdForGet(itemId);
+        ItemResponseFullDto itemDtoForGet = itemService.getItemByIdForGet(itemId);
 
         if (!itemDto.getOwnerId().equals(userId)) {
             itemDtoForGet.setLastBooking(null);
@@ -57,14 +57,14 @@ public class ItemController {
     }
 
     @GetMapping
-    public List<ItemDtoForGet> getItemsListByOwnerId(@RequestHeader(value = "X-Sharer-User-Id", required = false, defaultValue = "null") Long userId) {
+    public List<ItemResponseFullDto> getItemsListByOwnerId(@RequestHeader(value = "X-Sharer-User-Id", required = false, defaultValue = "null") Long userId) {
         log.info("ItemController.getItemsListByOwnerId: Получен запрос на список вещей пользователя с id={}", userId);
 
         List<ItemDto> itemsList = itemService.getItemsListByOwnerId(userId);
-        List<ItemDtoForGet> itemsForGet = new ArrayList<>();
+        List<ItemResponseFullDto> itemsForGet = new ArrayList<>();
 
         for (ItemDto itemDto : itemsList) {
-            ItemDtoForGet itemDtoForGet = itemService.getItemByIdForGet(itemDto.getId());
+            ItemResponseFullDto itemDtoForGet = itemService.getItemByIdForGet(itemDto.getId());
             bookingService.setLastAndNextBooking(itemDtoForGet);
             itemsForGet.add(itemDtoForGet);
         }

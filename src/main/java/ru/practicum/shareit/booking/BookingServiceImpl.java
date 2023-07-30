@@ -37,19 +37,14 @@ public class BookingServiceImpl implements BookingService {
         UserDto booker = userService.getUserById(bookerId);
         ItemDto item = itemService.getItemById(booking.getItemId());
 
-        if (!item.getAvailable()) {
-            throw new ValidationException("Вещь недоступна для бронирования.");
-        }
+        validateItem(item, bookerId);
 
-        if (item.getOwnerId().equals(bookerId)) {
-            throw new NotFoundException("Владелец не может бронировать свою вещь.");
-        }
         bookingValidator.isValid(booking);
 
         booking.setBooker(booker);
         booking.setStatus(BookingStatus.WAITING);
 
-        ItemForResponseDto itemForResponseDto = new ItemForResponseDto(item.getId());
+        ItemResponseShortDto itemForResponseDto = new ItemResponseShortDto(item.getId());
         itemForResponseDto.setName(item.getName());
         booking.setItem(itemForResponseDto);
 
@@ -247,7 +242,7 @@ public class BookingServiceImpl implements BookingService {
         }
     }
 
-    public ItemDtoForGet setLastAndNextBooking(ItemDtoForGet itemDtoForGet) {
+    public ItemResponseFullDto setLastAndNextBooking(ItemResponseFullDto itemDtoForGet) {
 
         Comparator<BookingDto> endComparator = (o1, o2) -> {
             if (o1.getEnd().isBefore(o2.getEnd())) {
@@ -276,12 +271,12 @@ public class BookingServiceImpl implements BookingService {
                 .filter(x -> !x.getStatus().equals(BookingStatus.REJECTED))
                 .max(endComparator);
 
-        BookingForItem lastBookingForItem = new BookingForItem();
+        BookingShortDto lastBookingShortDto = new BookingShortDto();
 
         if (lastBooking.isPresent()) {
-            lastBookingForItem.setId(lastBooking.get().getId());
-            lastBookingForItem.setBookerId(lastBooking.get().getBooker().getId());
-            itemDtoForGet.setLastBooking(lastBookingForItem);
+            lastBookingShortDto.setId(lastBooking.get().getId());
+            lastBookingShortDto.setBookerId(lastBooking.get().getBooker().getId());
+            itemDtoForGet.setLastBooking(lastBookingShortDto);
         }
 
         Optional<BookingDto> nextBooking = bookings.stream()
@@ -289,14 +284,24 @@ public class BookingServiceImpl implements BookingService {
                 .filter(x -> !x.getStatus().equals(BookingStatus.REJECTED))
                 .min(endComparator);
 
-        BookingForItem nextBookingForItem = new BookingForItem();
+        BookingShortDto nextBookingShortDto = new BookingShortDto();
 
         if (nextBooking.isPresent()) {
-            nextBookingForItem.setId(nextBooking.get().getId());
-            nextBookingForItem.setBookerId(nextBooking.get().getBooker().getId());
-            itemDtoForGet.setNextBooking(nextBookingForItem);
+            nextBookingShortDto.setId(nextBooking.get().getId());
+            nextBookingShortDto.setBookerId(nextBooking.get().getBooker().getId());
+            itemDtoForGet.setNextBooking(nextBookingShortDto);
         }
         return itemDtoForGet;
+    }
+
+    private void validateItem(ItemDto item, Long bookerId) {
+        if (!item.getAvailable()) {
+            throw new ValidationException("Вещь недоступна для бронирования.");
+        }
+
+        if (item.getOwnerId().equals(bookerId)) {
+            throw new NotFoundException("Владелец не может бронировать свою вещь.");
+        }
     }
 
 }
