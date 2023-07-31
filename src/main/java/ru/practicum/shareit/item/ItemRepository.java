@@ -1,21 +1,17 @@
 package ru.practicum.shareit.item;
 
-import ru.practicum.shareit.item.Item;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
 
 import java.util.List;
 
-public interface ItemRepository {
-    Item addItem(Item item);
+public interface ItemRepository extends JpaRepository<Item, Long> {
+    @Query(value = " select i from Item i " +
+            " where upper(i.name) like upper(concat('%', ?1, '%')) " +
+            " or upper(i.description) like upper(concat('%', ?1, '%'))")
 
-    Item getItemById(Long itemId);
+    List<Item> searchItemForRentByText(String text);
 
-    Item updateItem(Item item);
+    List<Item> findItemsByOwnerId(Long ownerId);
 
-    Boolean itemIsContained(Long itemId);
-
-    List<Item> getAll();
-
-    List<Item> getItemListByOwnerId(Long userId);
-
-    List<Item> searchItemByText(String text);
 }

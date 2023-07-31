@@ -1,6 +1,7 @@
 package ru.practicum.shareit.item;/* # parse("File Header.java")*/
 
 import org.springframework.stereotype.Component;
+import ru.practicum.shareit.user.User;
 
 import java.util.Optional;
 
@@ -17,8 +18,9 @@ public class ItemMapper {
         itemDto.setName(item.getName());
         itemDto.setDescription(item.getDescription());
         itemDto.setAvailable(item.getAvailable());
-        Optional.ofNullable(item.getId()).ifPresent(itemDto::setId);
-        Optional.ofNullable(item.getOwnerId()).ifPresent(itemDto::setOwnerId);
+        itemDto.setId(item.getId());
+        Long userId = item.getOwner().getId();
+        itemDto.setOwnerId(userId);
         Optional.ofNullable(item.getRequestId()).ifPresent(itemDto::setRequestId);
         return itemDto;
     }
@@ -29,8 +31,23 @@ public class ItemMapper {
         item.setDescription(itemDto.getDescription());
         item.setAvailable(itemDto.getAvailable());
         Optional.ofNullable(itemDto.getId()).ifPresent(item::setId);
-        Optional.ofNullable(itemDto.getOwnerId()).ifPresent(item::setOwnerId);
+        User user = new User();
+        Long userId = itemDto.getOwnerId();
+        user.setId(userId);
+        item.setOwner(user);
         Optional.ofNullable(itemDto.getRequestId()).ifPresent(item::setRequestId);
         return item;
     }
+
+    public static ItemResponseFullDto toDtoForGet(ItemDto itemDto) {
+
+        ItemResponseFullDto itemDtoForGetItems = new ItemResponseFullDto();
+
+        itemDtoForGetItems.setId(itemDto.getId());
+        itemDtoForGetItems.setName(itemDto.getName());
+        itemDtoForGetItems.setDescription(itemDto.getDescription());
+        itemDtoForGetItems.setAvailable(itemDto.getAvailable());
+        return itemDtoForGetItems;
+    }
+
 }

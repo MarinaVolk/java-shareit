@@ -2,9 +2,11 @@ package ru.practicum.shareit.user;/* # parse("File Header.java")*/
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import ru.practicum.shareit.exception.EmailValidationException;
+import ru.practicum.shareit.exception.NotFoundException;
 
+import javax.validation.ConstraintViolationException;
 import java.util.Collection;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -19,38 +21,54 @@ import java.util.stream.Collectors;
 @Slf4j
 @RequiredArgsConstructor
 public class UserServiceImpl implements UserService {
-    @Autowired
-    private UserRepository userRepository;
+    private final UserRepository userRepository;
+    private final UserValidator userValidator;
 
     @Override
     public UserDto addUser(UserDto userDto) {
         User user = UserMapper.fromDto(userDto);
         log.info("UserService: Создание пользователя с id={} ", user.getId());
-        user = userRepository.addUser(user);
-        return UserMapper.toDto(user);
+        userValidator.isValid(user);
+        try {
+            return UserMapper.toDto(userRepository.save(user));
+        } catch (ConstraintViolationException e) {
+            throw new EmailValidationException("Email не должен быть пустым.");
+        }
     }
 
     @Override
     public UserDto updateUser(UserDto userDto, Long userId) {
         User userUpdated = UserMapper.fromDto(userDto);
-        User oldUser = userRepository.getUserById(userId);
+        User oldUser = userRepository.getReferenceById(userId);
+        if (!userExistsById(userId)) {
+            log.error("Пользователя с id={} в базе нет.", userId);
+            throw new NotFoundException("Пользователя с id=" + userId + " в базе нет.");
+        }
 
         log.info("UserService: Обновление пользователя с id={} ", userId);
         User user = userUpdate(userUpdated, oldUser);
         user.setId(userId);
-        user = userRepository.updateUser(user);
+        user = userRepository.save(user);
         return UserMapper.toDto(user);
     }
 
     @Override
     public UserDto getUserById(Long userId) {
-        User user = userRepository.getUserById(userId);
+        if (userId == null) {
+            throw new NotFoundException("Такого пользователя не существует.");
+        }
+
+        if (!userExistsById(userId)) {
+            log.error("Пользователя с id={} в базе нет.", userId);
+            throw new NotFoundException("Пользователя с id=" + userId + " в базе нет.");
+        }
+        User user = userRepository.getReferenceById(userId);
         return UserMapper.toDto(user);
     }
 
     @Override
     public Collection<UserDto> getAll() {
-        List<User> allUsers = userRepository.getAll();
+        List<User> allUsers = userRepository.findAll();
         return allUsers.stream()
                 .map(UserMapper::toDto)
                 .collect(Collectors.toList());
@@ -58,7 +76,12 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public void deleteUserById(Long userId) {
-        userRepository.deleteUserById(userId);
+        userRepository.deleteById(userId);
+    }
+
+    @Override
+    public Boolean userExistsById(Long userId) {
+        return userRepository.existsById(userId);
     }
 
 
