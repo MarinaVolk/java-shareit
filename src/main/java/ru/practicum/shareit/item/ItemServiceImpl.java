@@ -4,6 +4,10 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import ru.practicum.shareit.exception.IncorrectOwnerId;
 import ru.practicum.shareit.exception.NotFoundException;
 import ru.practicum.shareit.exception.ValidationException;
@@ -11,6 +15,7 @@ import ru.practicum.shareit.item.comments.Comment;
 import ru.practicum.shareit.item.comments.CommentDto;
 import ru.practicum.shareit.item.comments.CommentMapper;
 import ru.practicum.shareit.item.comments.CommentRepository;
+import ru.practicum.shareit.request.ItemRequestDto;
 import ru.practicum.shareit.user.User;
 import ru.practicum.shareit.user.UserRepository;
 
@@ -32,6 +37,7 @@ public class ItemServiceImpl implements ItemService {
     private final UserRepository userRepository;
     private final CommentRepository commentRepository;
     private final ItemValidator validator;
+    private final ItemMapper itemMapper;
 
     @Override
     public ItemDto addItem(Long userId, ItemDto itemDto) {
@@ -109,13 +115,14 @@ public class ItemServiceImpl implements ItemService {
     }
 
     @Override
-    public List<ItemDto> searchItemByText(String text) {
+    public List<ItemDto> searchItemByText(String text, Integer from, Integer size) {
         if (!StringUtils.hasText(text)) {
             log.info("ItemService: текст для поиска пустой, список пуст.");
             return new ArrayList<>();
         } else {
             log.info("ItemService: запрос для поиска вещей содержащих текст \"{}\"", text);
-            return itemRepository.searchItemForRentByText(text).stream()
+            Pageable pageable = PageRequest.of(from / size, size, Sort.by("id").ascending());
+            return itemRepository.searchItemForRentByText(text, pageable).stream()
                     .filter(item -> item.getAvailable().equals(true))
                     .map(ItemMapper::toDto)
                     .collect(Collectors.toList());
@@ -179,5 +186,16 @@ public class ItemServiceImpl implements ItemService {
         }
         return item;
     }
+
+
+
+    /*@Override
+    public List<ItemRequestDto> getItemsDtoForItemRequestDtoByRequestId(Long requestId) {
+
+        return itemRepository.findItemsByRequestId(requestId).stream()
+                .map(itemMapper::toItemDtoForItemRequestDto)
+                .collect(Collectors.toList());
+
+    }*/
 
 }

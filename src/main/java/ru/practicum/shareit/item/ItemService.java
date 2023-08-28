@@ -2,6 +2,7 @@ package ru.practicum.shareit.item;
 
 import ru.practicum.shareit.item.comments.Comment;
 import ru.practicum.shareit.item.comments.CommentDto;
+import ru.practicum.shareit.request.ItemRequestDto;
 
 import java.util.List;
 
@@ -14,7 +15,7 @@ public interface ItemService {
 
     List<ItemDto> getItemsListByOwnerId(Long userId);
 
-    List<ItemDto> searchItemByText(String text);
+    List<ItemDto> searchItemByText(String text, Integer from, Integer size);
 
     CommentDto addComment(Comment comment, Long itemId, Long authorId);
 
@@ -23,4 +24,6 @@ public interface ItemService {
     Boolean itemExistsById(Long itemId);
 
     ItemResponseFullDto getItemByIdForGet(Long itemId);
+
+    //List<ItemRequestDto> getItemsDtoForItemRequestDtoByRequestId(Long requestId);  // rename
 }
