@@ -1,9 +1,7 @@
 package ru.practicum.shareit.item;
 
-import org.springframework.data.domain.Page;
 import ru.practicum.shareit.item.comments.Comment;
 import ru.practicum.shareit.item.comments.CommentDto;
-import ru.practicum.shareit.request.ItemRequestDto;
 
 import java.util.List;
 
@@ -28,5 +26,5 @@ public interface ItemService {
 
     ItemResponseFullDto getItemByIdForGet(Long itemId);
 
-    //List<ItemRequestDto> getItemsDtoForItemRequestDtoByRequestId(Long requestId);  // rename
+    List<ItemDto> getItemsForItemRequestDtoByRequestId(Long requestId);
 }

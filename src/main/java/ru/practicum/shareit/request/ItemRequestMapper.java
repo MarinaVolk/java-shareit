@@ -24,6 +24,5 @@ public class ItemRequestMapper {
         Optional.ofNullable(itemRequest.getCreated()).ifPresent(itemRequestDto::setCreated);
 
         return itemRequestDto;
-
     }
 }

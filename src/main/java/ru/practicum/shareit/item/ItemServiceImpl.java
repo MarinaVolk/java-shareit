@@ -15,7 +15,6 @@ import ru.practicum.shareit.item.comments.Comment;
 import ru.practicum.shareit.item.comments.CommentDto;
 import ru.practicum.shareit.item.comments.CommentMapper;
 import ru.practicum.shareit.item.comments.CommentRepository;
-import ru.practicum.shareit.request.ItemRequestDto;
 import ru.practicum.shareit.user.User;
 import ru.practicum.shareit.user.UserRepository;
 
@@ -37,7 +36,6 @@ public class ItemServiceImpl implements ItemService {
     private final UserRepository userRepository;
     private final CommentRepository commentRepository;
     private final ItemValidator validator;
-    private final ItemMapper itemMapper;
 
     @Override
     public ItemDto addItem(Long userId, ItemDto itemDto) {
@@ -117,7 +115,7 @@ public class ItemServiceImpl implements ItemService {
     @Override
     public List<Item> getItemsListByOwnerId(Long userId, Integer from, Integer size) {
         int page = from / size;
-        Pageable pageable = PageRequest.of(page, size, Sort.by("id").descending());
+        Pageable pageable = PageRequest.of(page, size, Sort.by("id").ascending());
         Page<Item> items = itemRepository.findItemsByOwnerId(userId, pageable);
 
         log.info("ItemService: запрос для получения списка вещей владельца с id={} ", userId);
@@ -197,15 +195,13 @@ public class ItemServiceImpl implements ItemService {
         return item;
     }
 
-
-
-    /*@Override
-    public List<ItemRequestDto> getItemsDtoForItemRequestDtoByRequestId(Long requestId) {
+    @Override
+    public List<ItemDto> getItemsForItemRequestDtoByRequestId(Long requestId) {
 
         return itemRepository.findItemsByRequestId(requestId).stream()
-                .map(itemMapper::toItemDtoForItemRequestDto)
+                .map(ItemMapper::toDto)
                 .collect(Collectors.toList());
 
-    }*/
+    }
 
 }

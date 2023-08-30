@@ -31,7 +31,6 @@ import java.util.stream.Collectors;
 public class BookingServiceImpl implements BookingService {
     private final BookingRepository bookingRepository;
     private final BookingValidator bookingValidator;
-    //private final BookingMapper bookingMapper;
     private final UserRepository userRepository;
     private final ItemService itemService;
     private final UserService userService;
@@ -157,16 +156,18 @@ public class BookingServiceImpl implements BookingService {
             log.error("Пользователя с id={} в базе нет", bookerId);
             throw new NotFoundException("Такого пользователя в базе нет.");
         }
-        //List<BookingDto> bookingsByBookerId = getBookingsByBookerId(bookerId);
-        //return getBookingDtos(status, bookingsByBookerId);
+        if (size < 1 || from < 0) {
+            log.error("Параметр size={} или from={} неверны", size, from);
+            throw new ValidationException("Некорректный параметр size или from.");
+        }
 
         Pageable pageable = PageRequest.of(from / size, size, Sort.by("start").descending());
-        return bookingRepository.findBookingsByBookerId(bookerId, pageable).getContent()
+        List<BookingDto> bookingsByBookerId = bookingRepository.findBookingsByBookerId(bookerId, pageable).getContent()
                 .stream()
                 .map(BookingMapper::toDto)
                 .collect(Collectors.toList());
 
-
+        return getBookingDtos(status, bookingsByBookerId);
     }
 
     @Override
@@ -192,8 +193,6 @@ public class BookingServiceImpl implements BookingService {
         List<Long> itemsIdByOwnerId = itemsByOwnerId.stream()
                 .map(ItemDto::getId)
                 .collect(Collectors.toList());
-
-        //List<BookingDto> bookingsByItemOwnerId = getBookingsByIdItemsList(itemsIdByOwnerId, from, size);
 
         Pageable pageable = PageRequest.of(from / size, size, Sort.by("start").descending());
 

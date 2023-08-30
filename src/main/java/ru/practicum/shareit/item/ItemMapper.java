@@ -50,20 +50,4 @@ public class ItemMapper {
         return itemDtoForGetItems;
     }
 
-    /*public ItemRequestDto toItemDtoForItemRequestDto(Item item) {
-
-        ItemForItemRequestDto itemForItemRequestDto = new ItemForItemRequestDto();
-
-        itemForItemRequestDto.setId(item.getId());
-        itemForItemRequestDto.setName(item.getName());
-        itemForItemRequestDto.setDescription(item.getDescription());
-        itemForItemRequestDto.setOwnerId(item.getOwnerId());
-        itemForItemRequestDto.setAvailable(item.getAvailable());
-
-        Optional.ofNullable(item.getRequestId()).ifPresent(itemForItemRequestDto::setRequestId);
-
-        return itemForItemRequestDto;
-
-    } */
-
 }

@@ -19,5 +19,5 @@ public class ItemRequestDto {
 
     private LocalDateTime created = LocalDateTime.now();
 
-    private List<ItemDto> items;  // maybe create ItemForItemRequestDto?
+    private List<ItemDto> items;
 }

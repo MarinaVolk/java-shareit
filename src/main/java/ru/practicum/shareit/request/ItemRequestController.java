@@ -3,7 +3,6 @@ package ru.practicum.shareit.request;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;
-import ru.practicum.shareit.booking.BookingService;
 
 import java.util.List;
 
@@ -22,14 +21,12 @@ public class ItemRequestController {
                                          @RequestBody ItemRequest itemRequest) {
 
         return service.addItemRequest(itemRequest, requestorId);
-
     }
 
     @GetMapping
     public List<ItemRequestDto> findAllRequestsByUser(@RequestHeader("X-Sharer-User-Id") Long requestorId) {
 
         return service.findItemRequestsByRequestorId(requestorId);
-
     }
 
     @GetMapping("/all")
@@ -38,7 +35,6 @@ public class ItemRequestController {
                                                        @RequestParam(required = false, defaultValue = "20") Integer size) {
 
         return service.findAllRequestsByPages(requestorId, from, size);
-
     }
 
     @GetMapping("{requestId}")
@@ -46,8 +42,6 @@ public class ItemRequestController {
                                           @PathVariable Long requestId) {
 
         return service.getItemRequestById(userId, requestId);
-
     }
-
 
 }

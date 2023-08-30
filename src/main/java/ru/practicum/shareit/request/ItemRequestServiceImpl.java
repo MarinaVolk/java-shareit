@@ -53,7 +53,7 @@ public class ItemRequestServiceImpl implements ItemRequestService {
         return itemRequestRepository.findItemRequestsByRequestorIdOrderByCreatedDesc(requestorId)
                 .stream()
                 .map(itemRequestMapper::toDto)
-                //.peek(x -> x.setItems(itemService.getItemsDtoForItemRequestDtoByRequestId(x.getId())))  // added
+                .peek(x -> x.setItems(itemService.getItemsForItemRequestDtoByRequestId(x.getId())))
                 .collect(Collectors.toList());
     }
 
@@ -98,9 +98,9 @@ public class ItemRequestServiceImpl implements ItemRequestService {
         }
 
 
-        return findItemRequestsByPages(requestorId, from, size). getContent()
+        return findItemRequestsByPages(requestorId, from, size).getContent()
                 .stream()
-                .peek(x -> x.setItems(itemService.getItemsListByOwnerId(requestorId))) // ???????
+                .peek(x -> x.setItems(itemService.getItemsForItemRequestDtoByRequestId(x.getId()))) // ???????
                 .collect(Collectors.toList());
 
     }
@@ -114,11 +114,9 @@ public class ItemRequestServiceImpl implements ItemRequestService {
         }
 
         ItemRequestDto itemRequestDto = getItemRequestById(requestId);
-        itemRequestDto.setItems(itemService.getItemsListByOwnerId(userId)); // ???????
+        itemRequestDto.setItems(itemService.getItemsForItemRequestDtoByRequestId(requestId));
 
         return itemRequestDto;
 
     }
-
-
 }
