@@ -115,6 +115,16 @@ public class ItemServiceImpl implements ItemService {
     }
 
     @Override
+    public List<Item> getItemsListByOwnerId(Long userId, Integer from, Integer size) {
+        int page = from / size;
+        Pageable pageable = PageRequest.of(page, size, Sort.by("id").descending());
+        Page<Item> items = itemRepository.findItemsByOwnerId(userId, pageable);
+
+        log.info("ItemService: запрос для получения списка вещей владельца с id={} ", userId);
+        return items.getContent();
+    }
+
+    @Override
     public List<ItemDto> searchItemByText(String text, Integer from, Integer size) {
         if (!StringUtils.hasText(text)) {
             log.info("ItemService: текст для поиска пустой, список пуст.");

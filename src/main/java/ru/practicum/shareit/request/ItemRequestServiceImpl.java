@@ -98,7 +98,7 @@ public class ItemRequestServiceImpl implements ItemRequestService {
         }
 
 
-        return findItemRequestsByPages(requestorId, from, size).getContent()
+        return findItemRequestsByPages(requestorId, from, size). getContent()
                 .stream()
                 .peek(x -> x.setItems(itemService.getItemsListByOwnerId(requestorId))) // ???????
                 .collect(Collectors.toList());

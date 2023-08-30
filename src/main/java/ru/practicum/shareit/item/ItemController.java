@@ -57,14 +57,16 @@ public class ItemController {
     }
 
     @GetMapping
-    public List<ItemResponseFullDto> getItemsListByOwnerId(@RequestHeader(value = "X-Sharer-User-Id", required = false, defaultValue = "null") Long userId) {
+    public List<ItemResponseFullDto> getItemsListByOwnerId(@RequestHeader(value = "X-Sharer-User-Id", required = false, defaultValue = "null") Long userId,
+                                                           @RequestParam(required = false, defaultValue = "0") Integer from,
+                                                           @RequestParam(required = false, defaultValue = "20") Integer size) {
         log.info("ItemController.getItemsListByOwnerId: Получен запрос на список вещей пользователя с id={}", userId);
 
-        List<ItemDto> itemsList = itemService.getItemsListByOwnerId(userId);
+        List<Item> itemsList = itemService.getItemsListByOwnerId(userId, from, size);
         List<ItemResponseFullDto> itemsForGet = new ArrayList<>();
 
-        for (ItemDto itemDto : itemsList) {
-            ItemResponseFullDto itemDtoForGet = itemService.getItemByIdForGet(itemDto.getId());
+        for (Item item : itemsList) {
+            ItemResponseFullDto itemDtoForGet = itemService.getItemByIdForGet(item.getId());
             bookingService.setLastAndNextBooking(itemDtoForGet);
             itemsForGet.add(itemDtoForGet);
         }

@@ -2,6 +2,9 @@ package ru.practicum.shareit.booking;/* # parse("File Header.java")*/
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import ru.practicum.shareit.exception.*;
 import ru.practicum.shareit.item.*;
@@ -28,6 +31,7 @@ import java.util.stream.Collectors;
 public class BookingServiceImpl implements BookingService {
     private final BookingRepository bookingRepository;
     private final BookingValidator bookingValidator;
+    //private final BookingMapper bookingMapper;
     private final UserRepository userRepository;
     private final ItemService itemService;
     private final UserService userService;
@@ -147,24 +151,37 @@ public class BookingServiceImpl implements BookingService {
     }
 
     @Override
-    public List<BookingDto> getAllBookingsByBookerIdDesc(Long bookerId, String status) {
+    public List<BookingDto> getAllBookingsByBookerIdDesc(Long bookerId, String status, Integer from, Integer size) {
 
         if (!userService.userExistsById(bookerId)) {
             log.error("Пользователя с id={} в базе нет", bookerId);
             throw new NotFoundException("Такого пользователя в базе нет.");
         }
+        //List<BookingDto> bookingsByBookerId = getBookingsByBookerId(bookerId);
+        //return getBookingDtos(status, bookingsByBookerId);
 
-        List<BookingDto> bookingsByBookerId = getBookingsByBookerId(bookerId);
-        return getBookingDtos(status, bookingsByBookerId);
+        Pageable pageable = PageRequest.of(from / size, size, Sort.by("start").descending());
+        return bookingRepository.findBookingsByBookerId(bookerId, pageable).getContent()
+                .stream()
+                .map(BookingMapper::toDto)
+                .collect(Collectors.toList());
+
+
     }
 
     @Override
-    public List<BookingDto> getAllBookingsByItemOwnerId(Long ownerId, String status) {
+    public List<BookingDto> getAllBookingsByItemOwnerId(Long ownerId, String status, Integer from, Integer size) {
 
         if (!userService.userExistsById(ownerId)) {
             log.error("Пользователя с id={} в базе нет.", ownerId);
             throw new NotFoundException("Такого пользователя в базе нет");
         }
+
+        if (size < 1 || from < 0) {
+            log.error("Параметр size={} или from={} неверны", size, from);
+            throw new ValidationException("Некорректный параметр size или from.");
+        }
+
 
         List<ItemDto> itemsByOwnerId = itemService.getItemsListByOwnerId(ownerId);
 
@@ -176,7 +193,14 @@ public class BookingServiceImpl implements BookingService {
                 .map(ItemDto::getId)
                 .collect(Collectors.toList());
 
-        List<BookingDto> bookingsByItemOwnerId = getBookingsByIdItemsList(itemsIdByOwnerId);
+        //List<BookingDto> bookingsByItemOwnerId = getBookingsByIdItemsList(itemsIdByOwnerId, from, size);
+
+        Pageable pageable = PageRequest.of(from / size, size, Sort.by("start").descending());
+
+        List<BookingDto> bookingsByItemOwnerId = bookingRepository.findBookingsByItemIdIn(itemsIdByOwnerId, pageable).getContent()
+                .stream()
+                .map(BookingMapper::toDto)
+                .collect(Collectors.toList());
 
         return getBookingDtos(status, bookingsByItemOwnerId);
 

@@ -1,5 +1,6 @@
 package ru.practicum.shareit.item;
 
+import org.springframework.data.domain.Page;
 import ru.practicum.shareit.item.comments.Comment;
 import ru.practicum.shareit.item.comments.CommentDto;
 import ru.practicum.shareit.request.ItemRequestDto;
@@ -14,6 +15,8 @@ public interface ItemService {
     ItemDto getItemById(Long itemId);
 
     List<ItemDto> getItemsListByOwnerId(Long userId);
+
+    List<Item> getItemsListByOwnerId(Long userId, Integer from, Integer size);
 
     List<ItemDto> searchItemByText(String text, Integer from, Integer size);
 
