@@ -47,8 +47,7 @@ public class BookingServiceImpl implements BookingService {
         booking.setBooker(booker);
         booking.setStatus(BookingStatus.WAITING);
 
-        ItemResponseShortDto itemForResponseDto = new ItemResponseShortDto(item.getId());
-        itemForResponseDto.setName(item.getName());
+        ItemResponseShortDto itemForResponseDto = new ItemResponseShortDto(item.getId(), item.getName());
         booking.setItem(itemForResponseDto);
 
         Booking bookingForRepository = BookingMapper.fromDto(booking);

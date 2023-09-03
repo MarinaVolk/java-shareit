@@ -22,8 +22,7 @@ public class BookingMapper {
         bookingDto.setEnd(booking.getEnd());
         bookingDto.setId(booking.getId());
 
-        ItemResponseShortDto item = new ItemResponseShortDto(booking.getItem().getId());
-        item.setName(booking.getItem().getName());
+        ItemResponseShortDto item = new ItemResponseShortDto(booking.getItem().getId(), booking.getItem().getName());
         bookingDto.setItem(item);
 
         bookingDto.setBooker(UserMapper.toDto(booking.getBooker()));
