@@ -25,5 +25,4 @@ public class ItemRequestValidator {
             throw new ValidationException("Описание не может быть пустым или null.");
         }
     }
-
 }

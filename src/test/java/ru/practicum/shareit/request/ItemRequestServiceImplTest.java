@@ -15,6 +15,7 @@ import ru.practicum.shareit.item.ItemDto;
 import ru.practicum.shareit.item.ItemResponseShortDto;
 import ru.practicum.shareit.item.ItemService;
 import ru.practicum.shareit.item.comments.CommentDto;
+import ru.practicum.shareit.user.User;
 import ru.practicum.shareit.user.UserDto;
 import ru.practicum.shareit.user.UserService;
 
@@ -66,7 +67,11 @@ class ItemRequestServiceImplTest {
     private static ItemRequest createItemRequest(String description) {
         ItemRequest itemRequest = new ItemRequest();
         itemRequest.setDescription(description);
-        itemRequest.setRequestorId(1L);
+
+        User requestor = new User();
+        requestor.setEmail("requestor1@email");
+        requestor.setName("requestor1");
+        itemRequest.setRequestor(requestor);
         itemRequest.setCreated(LocalDateTime.now().plusDays(1));
         return itemRequest;
     }

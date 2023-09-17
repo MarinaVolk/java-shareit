@@ -2,8 +2,10 @@ package ru.practicum.shareit.booking;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
+import javax.validation.Valid;
 import java.util.List;
 
 /**
@@ -13,13 +15,14 @@ import java.util.List;
 @Slf4j
 @RequiredArgsConstructor
 @RequestMapping(path = "/bookings")
+@Validated
 public class BookingController {
 
     private final BookingService service;
 
     @PostMapping
     public BookingDto addBooking(@RequestHeader("X-Sharer-User-Id") Long bookerId,
-                                 @RequestBody BookingDto booking) {
+                                 @Valid @RequestBody BookingDto booking) {
 
         return service.addBooking(booking, bookerId);
     }
@@ -39,8 +42,8 @@ public class BookingController {
     }
 
     @GetMapping
-    public List<BookingDto> getAllBookingsByBookerIdDesc(@RequestHeader("X-Sharer-User-Id") Long bookerId,
-                                                         @RequestParam(required = false, defaultValue = "ALL") String state,
+    public List<BookingDto> getAllBookingsByBookerIdDesc(@Valid @RequestHeader("X-Sharer-User-Id") Long bookerId,
+                                                         @Valid @RequestParam(required = false, defaultValue = "ALL") String state,
                                                          @RequestParam(required = false, defaultValue = "0") Integer from,
                                                          @RequestParam(required = false, defaultValue = "20") Integer size) {
 
@@ -48,8 +51,8 @@ public class BookingController {
     }
 
     @GetMapping("/owner")
-    public List<BookingDto> getAllBookingsByItemOwnerId(@RequestHeader("X-Sharer-User-Id") Long ownerId,
-                                                        @RequestParam(required = false, defaultValue = "ALL") String state,
+    public List<BookingDto> getAllBookingsByItemOwnerId(@Valid @RequestHeader("X-Sharer-User-Id") Long ownerId,
+                                                        @Valid @RequestParam(required = false, defaultValue = "ALL") String state,
                                                         @RequestParam(required = false, defaultValue = "0") Integer from,
                                                         @RequestParam(required = false, defaultValue = "20") Integer size) {
 

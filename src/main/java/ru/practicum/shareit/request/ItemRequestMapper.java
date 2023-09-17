@@ -17,7 +17,7 @@ public class ItemRequestMapper {
         ItemRequestDto itemRequestDto = new ItemRequestDto();
 
         itemRequestDto.setDescription(itemRequest.getDescription());
-        itemRequestDto.setRequestorId(itemRequest.getRequestorId());
+        itemRequestDto.setRequestorId(itemRequest.getRequestor().getId());
 
         Optional.ofNullable(itemRequest.getId()).ifPresent(itemRequestDto::setId);
 

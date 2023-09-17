@@ -2,9 +2,7 @@ package ru.practicum.shareit.booking;/* # parse("File Header.java")*/
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import ru.practicum.shareit.exception.*;
 import ru.practicum.shareit.item.*;
@@ -18,6 +16,9 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
+
+import static ru.practicum.shareit.booking.PageUtil.checkPageParameters;
+import static ru.practicum.shareit.booking.PageUtil.createPage;
 
 /**
  * File Name: BookingServiceImpl.java
@@ -155,16 +156,12 @@ public class BookingServiceImpl implements BookingService {
             log.error("Пользователя с id={} в базе нет", bookerId);
             throw new NotFoundException("Такого пользователя в базе нет.");
         }
-        if (size < 1 || from < 0) {
-            log.error("Параметр size={} или from={} неверны", size, from);
-            throw new ValidationException("Некорректный параметр size или from.");
-        }
 
-        Pageable pageable = PageRequest.of(from / size, size, Sort.by("start").descending());
-        List<BookingDto> bookingsByBookerId = bookingRepository.findBookingsByBookerId(bookerId, pageable).getContent()
-                .stream()
-                .map(BookingMapper::toDto)
-                .collect(Collectors.toList());
+        checkPageParameters(from, size);
+        Pageable pageable = createPage(from, size);
+
+        List<BookingDto> bookingsByBookerId = BookingMapper.toDtoList
+                (bookingRepository.findBookingsByBookerId(bookerId, pageable).getContent());
 
         return getBookingDtos(status, bookingsByBookerId);
     }
@@ -177,11 +174,7 @@ public class BookingServiceImpl implements BookingService {
             throw new NotFoundException("Такого пользователя в базе нет");
         }
 
-        if (size < 1 || from < 0) {
-            log.error("Параметр size={} или from={} неверны", size, from);
-            throw new ValidationException("Некорректный параметр size или from.");
-        }
-
+        checkPageParameters(from, size);
 
         List<ItemDto> itemsByOwnerId = itemService.getItemsListByOwnerId(ownerId);
 
@@ -193,15 +186,12 @@ public class BookingServiceImpl implements BookingService {
                 .map(ItemDto::getId)
                 .collect(Collectors.toList());
 
-        Pageable pageable = PageRequest.of(from / size, size, Sort.by("start").descending());
+        Pageable pageable = createPage(from, size);
 
-        List<BookingDto> bookingsByItemOwnerId = bookingRepository.findBookingsByItemIdIn(itemsIdByOwnerId, pageable).getContent()
-                .stream()
-                .map(BookingMapper::toDto)
-                .collect(Collectors.toList());
+        List<BookingDto> bookingsByItemOwnerId = BookingMapper.toDtoList
+                (bookingRepository.findBookingsByItemIdIn(itemsIdByOwnerId, pageable).getContent());
 
         return getBookingDtos(status, bookingsByItemOwnerId);
-
     }
 
     private List<BookingDto> getBookingDtos(String status, List<BookingDto> bookingsByItemOwnerId) {
