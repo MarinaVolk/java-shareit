@@ -12,8 +12,6 @@ import ru.practicum.shareit.exception.ValidationException;
 import ru.practicum.shareit.item.ItemDto;
 import ru.practicum.shareit.item.ItemResponseShortDto;
 import ru.practicum.shareit.item.ItemService;
-import ru.practicum.shareit.item.comments.CommentDto;
-import ru.practicum.shareit.request.ItemRequestDto;
 import ru.practicum.shareit.user.UserDto;
 import ru.practicum.shareit.user.UserService;
 
@@ -61,84 +59,116 @@ class BookingServiceImplTest {
         return bookingDto;
     }
 
-    private static ItemRequestDto createItemRequest(String description) {
-        ItemRequestDto itemRequestDto = new ItemRequestDto();
-        itemRequestDto.setDescription(description);
-        itemRequestDto.setRequestorId(1L);
-        itemRequestDto.setCreated(LocalDateTime.now().plusDays(1));
-        return itemRequestDto;
-    }
+    @Test
+    void addBookingExceptionWhenWrongBookerId() {
 
-    private static CommentDto createComment(String text) {
-        CommentDto commentDto = new CommentDto();
-        commentDto.setText(text);
-        return commentDto;
+        // GIVEN: созданы объекты userDto, itemDto и bookingDto
+        ItemDto itemDto1 = createItemDto("item1Description", "item1", true);
+        UserDto userDto1 = createUserDto("user1@email", "user1");
+        userDto1 = userService.addUser(userDto1);
+        itemDto1 = itemService.addItem(1L, itemDto1);
+
+        BookingDto booking = createBookingDto(BookingStatus.APPROVED, 1L, 1L,
+                LocalDateTime.now().plusSeconds(1), LocalDateTime.now().plusSeconds(3));
+
+        //WHEN: при попытке добавления букинга с несуществующим bookerId получаем ошибку NotFoundException
+        final NotFoundException userNotFoundException = assertThrows(
+                NotFoundException.class,
+                () -> bookingService.addBooking(booking, 99L)
+        );
+        // THEN: NotFoundException
+        assertEquals("Пользователя с id=99 в базе нет.", userNotFoundException.getMessage());
     }
 
     @Test
-    void addBookingShouldCreateBooking() {
+    void addBookingExceptionWhenWrongItemId() {
 
+        // GIVEN: созданы объекты userDto, itemDto и bookingDto
         ItemDto itemDto1 = createItemDto("item1Description", "item1", true);
-        ItemDto itemDto2 = createItemDto("item2Description", "item2", false);
-        ItemDto itemDto3 = createItemDto("item3Description", "item3", true);
-
         UserDto userDto1 = createUserDto("user1@email", "user1");
-        UserDto userDto2 = createUserDto("user2@email", "user2");
-        UserDto userDto3 = createUserDto("user3@email", "user3");
-
         userDto1 = userService.addUser(userDto1);
-        userDto2 = userService.addUser(userDto2);
-        userDto3 = userService.addUser(userDto3);
-
         itemDto1 = itemService.addItem(1L, itemDto1);
-        itemDto2 = itemService.addItem(1L, itemDto2);
-        itemDto3 = itemService.addItem(1L, itemDto3);
 
-        //Тесты ошибок при создании бронирования
-        BookingDto bookingForItem1FromUser2 = createBookingDto(BookingStatus.APPROVED, 1L, 2L,
-                LocalDateTime.now().plusSeconds(1), LocalDateTime.now().plusSeconds(3));
-
-        final NotFoundException userNotFoundException = assertThrows(
-                NotFoundException.class,
-                () -> bookingService.addBooking(bookingForItem1FromUser2, 99L)
-        );
-
-        assertEquals("Пользователя с id=99 в базе нет.", userNotFoundException.getMessage());
-
-        BookingDto bookingWithWrongItemId = createBookingDto(BookingStatus.APPROVED, 99L, 2L,
+        BookingDto bookingWithWrongItemId = createBookingDto(BookingStatus.APPROVED, 99L, 1L,
                 LocalDateTime.now().plusDays(1), LocalDateTime.now().plusDays(3));
 
+        //WHEN: при попытке добавления букинга с несуществующим itemId получаем ошибку NotFoundException
         final NotFoundException itemNotFoundException = assertThrows(
                 NotFoundException.class,
-                () -> bookingService.addBooking(bookingWithWrongItemId, 2L)
+                () -> bookingService.addBooking(bookingWithWrongItemId, 1L)
         );
-
+        // THEN: NotFoundException
         assertEquals("Такой вещи в базе нет.", itemNotFoundException.getMessage());
+    }
+
+    @Test
+    void addBookingExceptionWhenFalseAvailableStatus() {
+
+        // GIVEN: созданы объекты userDto, itemDto и bookingDto. У itemDto2 статус Availability = false
+        ItemDto itemDto1 = createItemDto("item1Description", "item1", true);
+        ItemDto itemDto2 = createItemDto("item2Description", "item2", false);
+        UserDto userDto1 = createUserDto("user1@email", "user1");
+        userDto1 = userService.addUser(userDto1);
+        UserDto userDto2 = createUserDto("user2@email", "user2");
+        userDto2 = userService.addUser(userDto2);
+        itemDto1 = itemService.addItem(1L, itemDto1);
+        itemDto2 = itemService.addItem(2L, itemDto2);
 
         BookingDto bookingForFalseAvailableStatus = createBookingDto(BookingStatus.APPROVED, 2L, 2L,
                 LocalDateTime.now().plusDays(1), LocalDateTime.now().plusDays(3));
 
+        //WHEN: при попытке добавления букинга со статусом Availability = False получаем ошибку ValidationException
         final ValidationException incorrectItemStatusForBookingException = assertThrows(
                 ValidationException.class,
                 () -> bookingService.addBooking(bookingForFalseAvailableStatus, 2L)
         );
-
+        // THEN: сообщение, что вещь недоступна для бронирования.
         assertEquals("Вещь недоступна для бронирования.", incorrectItemStatusForBookingException.getMessage());
+    }
 
-        BookingDto bookingForItem1FromOwner = createBookingDto(BookingStatus.APPROVED, 1L, 1L,
+
+    @Test
+    void addBookingExceptionWhenOwnerIsBooker() {
+        // GIVEN: созданы объекты userDto, itemDto и bookingDto
+        ItemDto itemDto1 = createItemDto("item1Description", "item1", true);
+        UserDto userDto1 = createUserDto("user1@email", "user1");
+        userDto1 = userService.addUser(userDto1);
+        itemDto1 = itemService.addItem(1L, itemDto1);
+
+        BookingDto bookingForItemFromOwner = createBookingDto(BookingStatus.APPROVED, 1L, 1L,
                 LocalDateTime.now().plusDays(1), LocalDateTime.now().plusDays(3));
 
+        // WHEN: если владелец указан в качестве букера, то получаем ошибку
         final NotFoundException bookingNotFoundException = assertThrows(
                 NotFoundException.class,
-                () -> bookingService.addBooking(bookingForItem1FromOwner, 1L)
+                () -> bookingService.addBooking(bookingForItemFromOwner, 1L)
         );
-
+        // THEN: сообщение, что владелец не может бронировать свою вещь
         assertEquals("Владелец не может бронировать свою вещь.", bookingNotFoundException.getMessage());
     }
 
+
+    @Test
+    void getBookingsExceptionWhenWrongBookerId() throws InterruptedException {
+        // GIVEN: созданы объекты userDto, itemDto и bookingDto
+        ItemDto itemDto1 = createItemDto("item1Description", "item1", true);
+        UserDto userDto1 = createUserDto("user1@email", "user1");
+        userDto1 = userService.addUser(userDto1);
+        itemDto1 = itemService.addItem(1L, itemDto1);
+
+        //WHEN: попытка получить bookings по неверному bookerId
+        final NotFoundException userNotFoundException = assertThrows(
+                NotFoundException.class,
+                () -> bookingService.getAllBookingsByBookerIdDesc(99L, "PAST", 0, 20)
+        );
+        //THEN: получаем сообщение об ошибке
+        assertEquals("Такого пользователя в базе нет.", userNotFoundException.getMessage());
+    }
+
+
     @Test
     void getBookingsShouldProvideBookingsUponRequest() throws InterruptedException {
-
+        // GIVEN: созданы объекты userDto, itemDto и bookingDto
         ItemDto itemDto1 = createItemDto("item1Description", "item1", true);
         ItemDto itemDto2 = createItemDto("item2Description", "item2", true);
         ItemDto itemDto3 = createItemDto("item3Description", "item3", true);
@@ -155,14 +185,7 @@ class BookingServiceImplTest {
         itemDto2 = itemService.addItem(1L, itemDto2);
         itemDto3 = itemService.addItem(1L, itemDto3);
 
-        //Тест исключения при получении бронирований по неверному bookerId
-        final NotFoundException userNotFoundException = assertThrows(
-                NotFoundException.class,
-                () -> bookingService.getAllBookingsByBookerIdDesc(99L, "PAST", 0, 20)
-        );
-
-        assertEquals("Такого пользователя в базе нет.", userNotFoundException.getMessage());
-
+        // GIVEN: созданы три букинга bookingPast, bookingCurrent, bookingFuture
         BookingDto bookingPast = createBookingDto(BookingStatus.APPROVED, 1L, 3L,
                 LocalDateTime.now().plusSeconds(1), LocalDateTime.now().plusSeconds(3));
 
@@ -172,66 +195,119 @@ class BookingServiceImplTest {
         BookingDto bookingFuture = createBookingDto(BookingStatus.APPROVED, 2L, 3L,
                 LocalDateTime.now().plusDays(2), LocalDateTime.now().plusDays(4));
 
+        // WHEN: пока букинги не добавлены через bookingService.addBooking, то getAllBookingsByBookerIdDesc()
+        // возвращает пустой список
         List<BookingDto> bookingsEmpty = bookingService.getAllBookingsByBookerIdDesc(3L, "ALL", 0, 20);
 
+        // THEN: пустой список
         assertEquals(0, bookingsEmpty.size());
 
+
+        // WHEN: букинги добавлены через bookingService.addBooking()
         BookingDto bookingDtoPast = bookingService.addBooking(bookingPast, 3L);
         BookingDto bookingDtoCurrent = bookingService.addBooking(bookingCurrent, 3L);
         BookingDto bookingDtoFuture = bookingService.addBooking(bookingFuture, 3L);
 
         Thread.sleep(4000);
 
+        // THEN: при запросе букингов со статусом "CURRENT", получаем их
         List<BookingDto> bookingsCurrent = bookingService.getAllBookingsByBookerIdDesc(3L, "CURRENT", 0, 20);
-
         assertEquals(1, bookingsCurrent.size());
 
+        // THEN: при запросе букингов со статусом "PAST", получаем их
         List<BookingDto> bookingsPast = bookingService.getAllBookingsByBookerIdDesc(3L, "PAST", 0, 20);
-
         assertEquals(1, bookingsPast.size());
 
+        // THEN: при запросе букингов со статусом "FUTURE", получаем их
         List<BookingDto> bookingsFuture = bookingService.getAllBookingsByBookerIdDesc(3L, "FUTURE", 0, 20);
-
         assertEquals(1, bookingsFuture.size());
 
-        // тест получения bookings
-
-        List<BookingDto> bookingsWaiting = bookingService.getAllBookingsByBookerIdDesc(3L, "WAITING", 0, 20);
-
-        assertEquals(3, bookingsWaiting.size());
-
+        // THEN: при запросе букингов со статусом "REJECTED", получаем их, если есть
         List<BookingDto> bookingsRejected = bookingService.getAllBookingsByBookerIdDesc(3L, "REJECTED", 0, 20);
-
         assertEquals(0, bookingsRejected.size());
 
+        // THEN: при запросе букингов со статусом "ALL", получаем их
         List<BookingDto> bookingsAll = bookingService.getAllBookingsByBookerIdDesc(3L, "ALL", 0, 20);
-
         assertEquals(3, bookingsAll.size());
+    }
 
+    @Test
+    void getBookingsExceptionWhenUnknownStatus() throws InterruptedException {
+        // GIVEN: созданы объекты userDto, itemDto и bookingDto
+        ItemDto itemDto1 = createItemDto("item1Description", "item1", true);
+        UserDto userDto1 = createUserDto("user1@email", "user1");
+        userDto1 = userService.addUser(userDto1);
+        itemDto1 = itemService.addItem(1L, itemDto1);
+
+        BookingDto bookingPast = createBookingDto(BookingStatus.APPROVED, 1L, 1L,
+                LocalDateTime.now().plusSeconds(1), LocalDateTime.now().plusSeconds(3));
+
+        // WHEN: при запросе букингов с несуществующим статусом, получаем ошибку UnSupportedStatusException
         final UnSupportedStatusException unSupportedStatusException = assertThrows(
                 UnSupportedStatusException.class,
-                () -> bookingService.getAllBookingsByBookerIdDesc(3L, "WWW", 0, 20)
+                () -> bookingService.getAllBookingsByBookerIdDesc(1L, "WWW", 0, 20)
         );
-
+        // THEN: Сообщение "Unknown state: WWW"
         assertEquals("Unknown state: WWW", unSupportedStatusException.getMessage());
+    }
 
-        // тест метода getAllBookingsByItemOwnerId
 
+    @Test
+    void getBookingsExceptionWhenIncorrectOwnerId() throws InterruptedException {
+        // GIVEN: созданы объекты userDto, itemDto и bookingDto
+        ItemDto itemDto1 = createItemDto("item1Description", "item1", true);
+        UserDto userDto1 = createUserDto("user1@email", "user1");
+        userDto1 = userService.addUser(userDto1);
+        itemDto1 = itemService.addItem(1L, itemDto1);
+
+        BookingDto bookingPast = createBookingDto(BookingStatus.APPROVED, 1L, 1L,
+                LocalDateTime.now().plusSeconds(1), LocalDateTime.now().plusSeconds(3));
+
+        // WHEN: при запросе букингов с несуществующим OwnerId, получаем ошибку NotFoundException
         final NotFoundException userNotFoundExceptionByGetAll = assertThrows(
                 NotFoundException.class,
                 () -> bookingService.getAllBookingsByItemOwnerId(99L, "ALL", 0, 20)
         );
-
+        // THEN: сообщение об ошибке
         assertEquals("Такого пользователя в базе нет", userNotFoundExceptionByGetAll.getMessage());
-
-        List<BookingDto> noBookingsForUser = bookingService.getAllBookingsByItemOwnerId(3L, "ALL", 0, 20);
-
-        assertEquals(0, noBookingsForUser.size());
-
-        List<BookingDto> bookingsByUser1 = bookingService.getAllBookingsByItemOwnerId(1L, "ALL", 0, 20);
-
-        assertEquals(3, bookingsByUser1.size());
-
     }
 
+    @Test
+    void getAllBookingsByItemOwnerIdPositiveTest() throws InterruptedException {
+        // GIVEN: созданы объекты userDto, itemDto и bookingDto
+        ItemDto itemDto1 = createItemDto("item1Description", "item1", true);
+        ItemDto itemDto2 = createItemDto("item2Description", "item2", true);
+        ItemDto itemDto3 = createItemDto("item3Description", "item3", true);
+
+        UserDto userDto1 = createUserDto("user1@email", "user1");
+        UserDto userDto2 = createUserDto("user2@email", "user2");
+
+        userDto1 = userService.addUser(userDto1);
+        userDto2 = userService.addUser(userDto2);
+        itemDto1 = itemService.addItem(1L, itemDto1);
+        itemDto2 = itemService.addItem(1L, itemDto2);
+        itemDto3 = itemService.addItem(1L, itemDto3);
+
+        BookingDto bookingPast = createBookingDto(BookingStatus.APPROVED, 1L, 2L,
+                LocalDateTime.now().plusSeconds(1), LocalDateTime.now().plusSeconds(3));
+
+        BookingDto bookingCurrent = createBookingDto(BookingStatus.APPROVED, 2L, 2L,
+                LocalDateTime.now().plusSeconds(1), LocalDateTime.now().plusDays(1));
+
+        BookingDto bookingFuture = createBookingDto(BookingStatus.APPROVED, 3L, 2L,
+                LocalDateTime.now().plusDays(2), LocalDateTime.now().plusDays(4));
+
+        BookingDto bookingDtoPast = bookingService.addBooking(bookingPast, 2L);
+        BookingDto bookingDtoCurrent = bookingService.addBooking(bookingCurrent, 2L);
+        BookingDto bookingDtoFuture = bookingService.addBooking(bookingFuture, 2L);
+
+        // WHEN: при запросе букингов по ItemOwnerId выдается соответствующее количество букингов
+        List<BookingDto> noBookingsForUser = bookingService.getAllBookingsByItemOwnerId(2L, "ALL", 0, 20);
+        // THEN: при отсутствии букингов пуст ой список
+        assertEquals(0, noBookingsForUser.size());
+
+        // THEN: при наличии букингов - список букингов
+        List<BookingDto> bookingsByUser1 = bookingService.getAllBookingsByItemOwnerId(1L, "ALL", 0, 20);
+        assertEquals(3, bookingsByUser1.size());
+    }
 }

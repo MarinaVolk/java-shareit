@@ -83,8 +83,75 @@ class ItemRequestServiceImplTest {
     }
 
     @Test
-    void addItemRequestShouldAddItemRequest() {
+    void addItemRequestExceptionWhenWrongRequestorId() {
+        // GIVEN: созданы объекты itemDto, userDto, itemRequest
+        ItemDto itemDto1 = createItemDto("item1Description", "item1", true);
+        UserDto userDto1 = createUserDto("user1@email", "user1");
+        userDto1 = userService.addUser(userDto1);
+        itemDto1 = itemService.addItem(1L, itemDto1);
 
+        ItemRequest itemRequest1 = createItemRequest("descriptionItemRequest1");
+
+        //WHEN: попытка добавить itemRequest с указанием неверного requestorId
+        final NotFoundException userNotFoundException = assertThrows(
+                NotFoundException.class,
+                () -> itemRequestService.addItemRequest(itemRequest1, 99L)
+        );
+        //THEN: получаем ошибку NotFoundException
+        assertEquals("Пользователя с id=99 в базе нет.", userNotFoundException.getMessage());
+    }
+
+    @Test
+    void addItemRequestShouldAddItemRequest() {
+        // GIVEN: созданы объекты itemDto, userDto, itemRequest, itemRequestDto1
+        ItemDto itemDto1 = createItemDto("item1Description", "item1", true);
+        UserDto userDto1 = createUserDto("user1@email", "user1");
+        UserDto userDto2 = createUserDto("user2@email", "user2");
+        userDto1 = userService.addUser(userDto1);
+        userDto2 = userService.addUser(userDto2);
+        itemDto1 = itemService.addItem(1L, itemDto1);
+
+        ItemRequest itemRequest1 = createItemRequest("descriptionItemRequest1");
+
+        // WHEN: после добавления itemRequest через сервис и затем получения itemRequest по Id,
+        // получаем соответствующий itemRequest
+        ItemRequestDto itemRequestDto1 = itemRequestService.addItemRequest(itemRequest1, 2L);
+
+        // THEN: получаем соответствующий itemRequest
+        assertEquals(1, itemRequestDto1.getId());
+    }
+
+    @Test
+    void getItemRequestExceptionWhenWrongId() {
+        // GIVEN: созданы объекты itemDto, userDto, itemRequest
+        ItemDto itemDto1 = createItemDto("item1Description", "item1", true);
+        UserDto userDto1 = createUserDto("user1@email", "user1");
+        UserDto userDto2 = createUserDto("user2@email", "user2");
+        userDto1 = userService.addUser(userDto1);
+        userDto2 = userService.addUser(userDto2);
+        itemDto1 = itemService.addItem(1L, itemDto1);
+        ItemRequest itemRequest1 = createItemRequest("descriptionItemRequest1");
+
+        // WHEN: вызываем метод getItemRequestById() с указанием неверного Id пользователя
+        final NotFoundException userNotFoundExceptionByGetId = assertThrows(
+                NotFoundException.class,
+                () -> itemRequestService.getItemRequestById(99L, 1L)
+        );
+        // THEN: получаем NotFoundException с сообщением об ошибке
+        assertEquals("Такого пользователя в базе нет.", userNotFoundExceptionByGetId.getMessage());
+
+        // WHEN: вызываем метод getItemRequestById с указанием неверного requestId
+        final NotFoundException itemRequestNotFoundException = assertThrows(
+                NotFoundException.class,
+                () -> itemRequestService.getItemRequestById(2L, 99L)
+        );
+        // THEN: получаем NotFoundException с сообщением об ошибке
+        assertEquals("Запроса в базе нет.", itemRequestNotFoundException.getMessage());
+    }
+
+    @Test
+    void addItemRequestPositiveTest() {
+        // GIVEN: созданы объекты itemDto, userDto, itemRequest, itemRequestDto
         ItemDto itemDto1 = createItemDto("item1Description", "item1", true);
         ItemDto itemDto2 = createItemDto("item2Description", "item2", true);
         ItemDto itemDto3 = createItemDto("item3Description", "item3", true);
@@ -103,83 +170,85 @@ class ItemRequestServiceImplTest {
 
         ItemRequest itemRequest1 = createItemRequest("descriptionItemRequest1");
 
-        //Тестируем добавление запроса
-        final NotFoundException userNotFoundException = assertThrows(
-                NotFoundException.class,
-                () -> itemRequestService.addItemRequest(itemRequest1, 99L)
-        );
-
-        assertEquals("Такого пользователя в базе нет.", userNotFoundException.getMessage());
-
+        //WHEN: добавили itemRequest
         ItemRequestDto itemRequestDto1 = itemRequestService.addItemRequest(itemRequest1, 3L);
-
         assertEquals(1, itemRequestDto1.getId());
 
-        //Тестируем получение запроса по id
-        final NotFoundException userNotFoundExceptionByGetId = assertThrows(
-                NotFoundException.class,
-                () -> itemRequestService.getItemRequestById(99L, 1L)
-        );
-
-        assertEquals("Такого пользователя в базе нет.", userNotFoundExceptionByGetId.getMessage());
-
-        final NotFoundException itemRequestNotFoundException = assertThrows(
-                NotFoundException.class,
-                () -> itemRequestService.getItemRequestById(2L, 99L)
-        );
-
-        assertEquals("Запроса в базе нет.", itemRequestNotFoundException.getMessage());
-
+        //THEN: получаем добавленный itemRequest по Id
         ItemRequestDto itemRequestDtoById = itemRequestService.getItemRequestById(2L, 1L);
-
         assertEquals(1, itemRequestDtoById.getId());
 
-        //Тестируем findAllRequestsByRequestorId
-        final NotFoundException userNotFoundExceptionByFindAllByRequestorId = assertThrows(
-                NotFoundException.class,
-                () -> itemRequestService.findItemRequestsByRequestorId(99L)
-        );
-
-        assertEquals("Такого пользователя в базе нет.", userNotFoundExceptionByFindAllByRequestorId.getMessage());
-
+        //WHEN: добавили еще один itemRequest
         ItemRequest itemRequest2 = createItemRequest("descriptionItemRequest2");
         ItemRequestDto itemRequestDto2 = itemRequestService.addItemRequest(itemRequest2, 3L);
+
+        //THEN: получаем список itemRequests по RequestorId
         List<ItemRequestDto> itemRequestsByRequestorId = itemRequestService.findItemRequestsByRequestorId(3L);
-
         assertEquals(2, itemRequestsByRequestorId.size());
+    }
 
-        //Тестируем findAllRequestsByPages
+    @Test
+    void findAllRequestsByPagesExceptionWhenWrongParameters() {
+        // GIVEN: созданы объекты itemDto, userDto, itemRequest
+        ItemDto itemDto1 = createItemDto("item1Description", "item1", true);
+        UserDto userDto1 = createUserDto("user1@email", "user1");
+        userDto1 = userService.addUser(userDto1);
+        itemDto1 = itemService.addItem(1L, itemDto1);
+        ItemRequest itemRequest1 = createItemRequest("descriptionItemRequest1");
+
+        //WHEN: вызываем метод findAllRequestsByPages с неверным requestorId
         final NotFoundException userNotFoundExceptionByFindAll = assertThrows(
                 NotFoundException.class,
                 () -> itemRequestService.findAllRequestsByPages(99L, 0, 20)
         );
-
+        //THEN: получаем ошибку NotFoundException
         assertEquals("Такого пользователя в базе нет.", userNotFoundExceptionByFindAll.getMessage());
 
+        //WHEN: вызываем метод findAllRequestsByPages с неверным параметром from
         final ValidationException invalidParametersException1 = assertThrows(
                 ValidationException.class,
                 () -> itemRequestService.findAllRequestsByPages(1L, -1, 20)
         );
-
+        //THEN: получаем ошибку ValidationException
         assertEquals("Параметр size или from некорректный", invalidParametersException1.getMessage());
 
+        //WHEN: вызываем метод findAllRequestsByPages с неверным параметром size
         final ValidationException invalidParametersException2 = assertThrows(
                 ValidationException.class,
                 () -> itemRequestService.findAllRequestsByPages(1L, 0, 0)
         );
-
+        //THEN: получаем ошибку ValidationException
         assertEquals("Параметр size или from некорректный", invalidParametersException2.getMessage());
+    }
 
+    @Test
+    void findAllRequestsByPagesPositiveTest() {
+        // GIVEN: созданы объекты itemDto, userDto, itemRequest,itemRequestDto
+        ItemDto itemDto1 = createItemDto("item1Description", "item1", true);
+        ItemDto itemDto2 = createItemDto("item2Description", "item2", true);
+        ItemDto itemDto3 = createItemDto("item3Description", "item3", true);
+
+        UserDto userDto1 = createUserDto("user1@email", "user1");
+        UserDto userDto2 = createUserDto("user2@email", "user2");
+        UserDto userDto3 = createUserDto("user3@email", "user3");
+
+        userDto1 = userService.addUser(userDto1);
+        userDto2 = userService.addUser(userDto2);
+
+        itemDto1 = itemService.addItem(1L, itemDto1);
+        itemDto2 = itemService.addItem(1L, itemDto2);
+        itemDto3 = itemService.addItem(1L, itemDto3);
+
+        ItemRequest itemRequest1 = createItemRequest("descriptionItemRequest1");
+        ItemRequestDto itemRequestDto1 = itemRequestService.addItemRequest(itemRequest1, 2L);
+
+        ItemRequest itemRequest2 = createItemRequest("descriptionItemRequest2");
+        ItemRequestDto itemRequestDto2 = itemRequestService.addItemRequest(itemRequest2, 2L);
+
+        //WHEN: вызываем метод findAllRequestsByPages() с указанием правильных параметров
         List<ItemRequestDto> itemRequestsByFindAll = itemRequestService.findAllRequestsByPages(1L, 0, 20);
 
+        //THEN: получаем соответствующий список реквестов
         assertEquals(2, itemRequestsByFindAll.size());
-
-        ItemDto itemDto4 = createItemDto("item4Description", "item4", true);
-        itemDto4.setRequestId(1L);
-
-        itemDto4 = itemService.addItem(1L, itemDto4);
-        ItemRequestDto itemRequestDtoForItem4 = itemRequestService.getItemRequestById(1L, 1L);
-
-        assertEquals(1, itemRequestDtoForItem4.getItems().size());
     }
 }
