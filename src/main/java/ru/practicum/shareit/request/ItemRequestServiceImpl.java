@@ -64,8 +64,7 @@ public class ItemRequestServiceImpl implements ItemRequestService {
     @Override
     public Page<ItemRequestDto> findItemRequestsByPages(Long requestorId, Integer from, Integer size) {
 
-        checkPageParameters(from, size);
-        Pageable pageable = createPageForItemReq(from, size);
+        Pageable pageable = createPage(from, size, "created");
         return itemRequestRepository.findAllByRequestorIdNot(requestorId, pageable)
                 .map(itemRequestMapper::toDto);
     }

@@ -22,7 +22,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 @JsonTest
 public class BookingDtoJsonTest {
     @Autowired
-    JacksonTester<BookingDto> json;
+    private JacksonTester<BookingDto> json;
 
     @Test
     void bookingDtoTest() throws IOException {

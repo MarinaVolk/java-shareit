@@ -17,7 +17,6 @@ import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
-import static ru.practicum.shareit.booking.PageUtil.checkPageParameters;
 import static ru.practicum.shareit.booking.PageUtil.createPage;
 
 /**
@@ -157,8 +156,7 @@ public class BookingServiceImpl implements BookingService {
             throw new NotFoundException("Такого пользователя в базе нет.");
         }
 
-        checkPageParameters(from, size);
-        Pageable pageable = createPage(from, size);
+        Pageable pageable = createPage(from, size, "start");
 
         List<BookingDto> bookingsByBookerId = BookingMapper.toDtoList
                 (bookingRepository.findBookingsByBookerId(bookerId, pageable).getContent());
@@ -173,9 +171,6 @@ public class BookingServiceImpl implements BookingService {
             log.error("Пользователя с id={} в базе нет.", ownerId);
             throw new NotFoundException("Такого пользователя в базе нет");
         }
-
-        checkPageParameters(from, size);
-
         List<ItemDto> itemsByOwnerId = itemService.getItemsListByOwnerId(ownerId);
 
         if (itemsByOwnerId.size() == 0) {
@@ -186,7 +181,7 @@ public class BookingServiceImpl implements BookingService {
                 .map(ItemDto::getId)
                 .collect(Collectors.toList());
 
-        Pageable pageable = createPage(from, size);
+        Pageable pageable = createPage(from, size, "start");
 
         List<BookingDto> bookingsByItemOwnerId = BookingMapper.toDtoList
                 (bookingRepository.findBookingsByItemIdIn(itemsIdByOwnerId, pageable).getContent());

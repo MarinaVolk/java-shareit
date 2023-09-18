@@ -13,16 +13,13 @@ import ru.practicum.shareit.exception.ValidationException;
  */
 public class PageUtil {
 
-    public static Pageable createPage(Integer from, Integer size) {
-        return PageRequest.of(from / size, size, Sort.by("start").descending());
+    public static Pageable createPage(Integer from, Integer size, String sortBy) {
+        checkPageParameters(from, size);
+        Pageable pageable = PageRequest.of(from / size, size, Sort.by(sortBy).descending());
+        return pageable;
     }
 
-    public static Pageable createPageForItemReq(Integer from, Integer size) {
-        int page = from / size;
-        return PageRequest.of(page, size, Sort.by("created").descending());
-    }
-
-    public static void checkPageParameters(Integer from, Integer size) {
+    private static void checkPageParameters(Integer from, Integer size) {
         if (size < 1 || from < 0) {
             throw new ValidationException("Некорректный параметр size или from.");
         }
