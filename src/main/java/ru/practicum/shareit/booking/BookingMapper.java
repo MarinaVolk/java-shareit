@@ -5,7 +5,9 @@ import ru.practicum.shareit.item.Item;
 import ru.practicum.shareit.item.ItemResponseShortDto;
 import ru.practicum.shareit.user.UserMapper;
 
+import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 /**
  * File Name: BookingMapper.java
@@ -22,13 +24,19 @@ public class BookingMapper {
         bookingDto.setEnd(booking.getEnd());
         bookingDto.setId(booking.getId());
 
-        ItemResponseShortDto item = new ItemResponseShortDto(booking.getItem().getId());
-        item.setName(booking.getItem().getName());
+        ItemResponseShortDto item = new ItemResponseShortDto(booking.getItem().getId(), booking.getItem().getName());
         bookingDto.setItem(item);
 
         bookingDto.setBooker(UserMapper.toDto(booking.getBooker()));
 
         return bookingDto;
+    }
+
+    public static List<BookingDto> toDtoList (List<Booking> bookings) {
+        return bookings
+                .stream()
+                .map(BookingMapper::toDto)
+                .collect(Collectors.toList());
     }
 
     public static Booking fromDto(BookingDto bookingDto) {

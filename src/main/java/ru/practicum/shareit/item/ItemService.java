@@ -14,7 +14,9 @@ public interface ItemService {
 
     List<ItemDto> getItemsListByOwnerId(Long userId);
 
-    List<ItemDto> searchItemByText(String text);
+    List<Item> getItemsListByOwnerId(Long userId, Integer from, Integer size);
+
+    List<ItemDto> searchItemByText(String text, Integer from, Integer size);
 
     CommentDto addComment(Comment comment, Long itemId, Long authorId);
 
@@ -23,4 +25,6 @@ public interface ItemService {
     Boolean itemExistsById(Long itemId);
 
     ItemResponseFullDto getItemByIdForGet(Long itemId);
+
+    List<ItemDto> getItemsForItemRequestDtoByRequestId(Long requestId);
 }

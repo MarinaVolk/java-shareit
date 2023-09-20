@@ -4,6 +4,10 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import ru.practicum.shareit.exception.IncorrectOwnerId;
 import ru.practicum.shareit.exception.NotFoundException;
 import ru.practicum.shareit.exception.ValidationException;
@@ -109,13 +113,24 @@ public class ItemServiceImpl implements ItemService {
     }
 
     @Override
-    public List<ItemDto> searchItemByText(String text) {
+    public List<Item> getItemsListByOwnerId(Long userId, Integer from, Integer size) {
+        int page = from / size;
+        Pageable pageable = PageRequest.of(page, size, Sort.by("id").ascending());
+        Page<Item> items = itemRepository.findItemsByOwnerId(userId, pageable);
+
+        log.info("ItemService: запрос для получения списка вещей владельца с id={} ", userId);
+        return items.getContent();
+    }
+
+    @Override
+    public List<ItemDto> searchItemByText(String text, Integer from, Integer size) {
         if (!StringUtils.hasText(text)) {
             log.info("ItemService: текст для поиска пустой, список пуст.");
             return new ArrayList<>();
         } else {
             log.info("ItemService: запрос для поиска вещей содержащих текст \"{}\"", text);
-            return itemRepository.searchItemForRentByText(text).stream()
+            Pageable pageable = PageRequest.of(from / size, size, Sort.by("id").ascending());
+            return itemRepository.searchItemForRentByText(text, pageable).stream()
                     .filter(item -> item.getAvailable().equals(true))
                     .map(ItemMapper::toDto)
                     .collect(Collectors.toList());
@@ -178,6 +193,15 @@ public class ItemServiceImpl implements ItemService {
             item.setOwner(oldItem.getOwner());
         }
         return item;
+    }
+
+    @Override
+    public List<ItemDto> getItemsForItemRequestDtoByRequestId(Long requestId) {
+
+        return itemRepository.findItemsByRequestId(requestId).stream()
+                .map(ItemMapper::toDto)
+                .collect(Collectors.toList());
+
     }
 
 }

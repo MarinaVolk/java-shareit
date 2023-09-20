@@ -21,9 +21,9 @@ public interface BookingService {
 
     BookingDto approveBooking(Long ownerId, Long bookingId, Boolean approved);
 
-    List<BookingDto> getAllBookingsByBookerIdDesc(Long bookerId, String status);
+    List<BookingDto> getAllBookingsByBookerIdDesc(Long bookerId, String status, Integer from, Integer size);
 
-    List<BookingDto> getAllBookingsByItemOwnerId(Long ownerId, String status);
+    List<BookingDto> getAllBookingsByItemOwnerId(Long ownerId, String status, Integer from, Integer size);
 
     ItemResponseFullDto setLastAndNextBooking(ItemResponseFullDto itemDtoForGet);
 
