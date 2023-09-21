@@ -8,6 +8,7 @@ import lombok.Data;
  * Date: 2023-06-22,   6:57 PM (UTC+3)
  * Description:
  */
+
 @Data
 public class UserDto {
     private Long id;

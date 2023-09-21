@@ -17,6 +17,7 @@ import java.util.stream.Collectors;
  * Date: 2023-06-22,   10:48 PM (UTC+3)
  * Description:
  */
+
 @Service
 @Slf4j
 @RequiredArgsConstructor
@@ -44,7 +45,6 @@ public class UserServiceImpl implements UserService {
             log.error("Пользователя с id={} в базе нет.", userId);
             throw new NotFoundException("Пользователя с id=" + userId + " в базе нет.");
         }
-
         log.info("UserService: Обновление пользователя с id={} ", userId);
         User user = userUpdate(userUpdated, oldUser);
         user.setId(userId);
