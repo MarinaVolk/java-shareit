@@ -32,7 +32,7 @@ public class BookingMapper {
         return bookingDto;
     }
 
-    public static List<BookingDto> toDtoList (List<Booking> bookings) {
+    public static List<BookingDto> toDtoList(List<Booking> bookings) {
         return bookings
                 .stream()
                 .map(BookingMapper::toDto)

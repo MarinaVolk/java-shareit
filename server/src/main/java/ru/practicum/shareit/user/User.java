@@ -1,6 +1,5 @@
 package ru.practicum.shareit.user;
 
-import com.sun.istack.NotNull;
 import lombok.Data;
 
 import javax.persistence.*;

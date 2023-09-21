@@ -158,9 +158,7 @@ public class BookingServiceImpl implements BookingService {
 
         Pageable pageable = createPage(from, size, "start");
 
-        List<BookingDto> bookingsByBookerId = BookingMapper.toDtoList
-                (bookingRepository.findBookingsByBookerId(bookerId, pageable).getContent());
-
+        List<BookingDto> bookingsByBookerId = BookingMapper.toDtoList(bookingRepository.findBookingsByBookerId(bookerId, pageable).getContent());
         return getBookingDtos(status, bookingsByBookerId);
     }
 
@@ -183,9 +181,7 @@ public class BookingServiceImpl implements BookingService {
 
         Pageable pageable = createPage(from, size, "start");
 
-        List<BookingDto> bookingsByItemOwnerId = BookingMapper.toDtoList
-                (bookingRepository.findBookingsByItemIdIn(itemsIdByOwnerId, pageable).getContent());
-
+        List<BookingDto> bookingsByItemOwnerId = BookingMapper.toDtoList(bookingRepository.findBookingsByItemIdIn(itemsIdByOwnerId, pageable).getContent());
         return getBookingDtos(status, bookingsByItemOwnerId);
     }
 

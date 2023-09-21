@@ -2,9 +2,7 @@ package ru.practicum.shareit.request;
 
 import lombok.Data;
 import ru.practicum.shareit.item.ItemDto;
-import ru.practicum.shareit.user.User;
 
-import javax.persistence.ManyToOne;
 import java.time.LocalDateTime;
 import java.util.List;
 

@@ -17,7 +17,7 @@ public class ItemResponseShortDto {
     private String name;
 
     @JsonCreator
-    public ItemResponseShortDto(@JsonProperty("id") Long id, @JsonProperty("name") String name){
+    public ItemResponseShortDto(@JsonProperty("id") Long id, @JsonProperty("name") String name) {
         this.id = id;
         this.name = name;
     }

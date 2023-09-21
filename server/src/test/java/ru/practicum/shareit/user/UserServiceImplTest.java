@@ -46,8 +46,8 @@ class UserServiceImplTest {
         userDto1Update.setEmail("user1update@email");
         userDto1Update.setName("user1");
 
-        UserDto userDto_1 = userService.addUser(userDto1);
-        Long id = userDto_1.getId();
+        UserDto userDto = userService.addUser(userDto1);
+        Long id = userDto.getId();
 
         UserDto updatedUserDto = userService.updateUser(userDto1Update, id);
 
@@ -56,8 +56,8 @@ class UserServiceImplTest {
 
     @Test
     void getUserByIdShouldProvideUserById() {
-        UserDto userDto_2 = userService.addUser(userDto1);
-        Long id = userDto_2.getId();
+        UserDto userDto2 = userService.addUser(userDto1);
+        Long id = userDto2.getId();
 
         UserDto obtainedUserDto = userService.getUserById(id);
 
