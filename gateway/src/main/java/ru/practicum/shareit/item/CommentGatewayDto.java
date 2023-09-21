@@ -6,12 +6,14 @@ import lombok.NoArgsConstructor;
 
 import javax.validation.constraints.NotEmpty;
 import javax.validation.constraints.NotNull;
+
 /**
  * File Name: CommentGatewayDto.java
  * Author: Marina Volkova
  * Date: 2023-09-21,   7:59 PM (UTC+3)
  * Description:
  */
+
 @Getter
 @NoArgsConstructor
 @AllArgsConstructor

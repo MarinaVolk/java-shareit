@@ -10,12 +10,14 @@ import org.springframework.web.util.DefaultUriBuilderFactory;
 import ru.practicum.shareit.client.BaseClient;
 
 import java.util.Map;
+
 /**
  * File Name: RequestClient.java
  * Author: Marina Volkova
  * Date: 2023-09-21,   8:01 PM (UTC+3)
  * Description:
  */
+
 @Service
 public class RequestClient extends BaseClient {
 
