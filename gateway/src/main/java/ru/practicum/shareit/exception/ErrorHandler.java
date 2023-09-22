@@ -30,4 +30,16 @@ public class ErrorHandler {
         return new ErrorResponse(e.getMessage());
     }
 
+    @ExceptionHandler
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    public ErrorResponse invalidDatesException(final InvalidDatesException e) {
+        return new ErrorResponse("Error:" + e.getMessage());
+    }
+
+    @ExceptionHandler
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    public ErrorResponse validationException(final ValidationException e) {
+        return new ErrorResponse("Error:" + e.getMessage());
+    }
+
 }

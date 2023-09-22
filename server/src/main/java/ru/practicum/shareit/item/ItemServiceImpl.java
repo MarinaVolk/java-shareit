@@ -35,13 +35,11 @@ public class ItemServiceImpl implements ItemService {
     private final ItemRepository itemRepository;
     private final UserRepository userRepository;
     private final CommentRepository commentRepository;
-    private final ItemValidator validator;
 
     @Override
     public ItemDto addItem(Long userId, ItemDto itemDto) {
         Item item = ItemMapper.fromDto(itemDto);
 
-        validator.isValid(item);
         if (!userRepository.existsById(userId)) {
             throw new NotFoundException("Такого пользователя в базе нет.");
         }
@@ -59,7 +57,6 @@ public class ItemServiceImpl implements ItemService {
             log.error("ItemService: вещь с id={} не принадлежит пользователю с id={}", itemId, userId);
             throw new IncorrectOwnerId("Нельзя редактировать не принадлежащую пользователю вещь.");
         }
-
         log.info("ItemService: вещь с id={} обновлена.", itemId);
         Item item = itemUpdate(updateItem, oldItem);
         item.setId(itemId);
@@ -98,7 +95,6 @@ public class ItemServiceImpl implements ItemService {
             commentDtos.add(commentDto);
         }
         itemDtoForGet.setComments(commentDtos);
-
         return itemDtoForGet;
     }
 
@@ -203,5 +199,4 @@ public class ItemServiceImpl implements ItemService {
                 .collect(Collectors.toList());
 
     }
-
 }

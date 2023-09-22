@@ -7,6 +7,7 @@ import lombok.NoArgsConstructor;
 import javax.validation.constraints.Email;
 import javax.validation.constraints.NotEmpty;
 import javax.validation.constraints.NotNull;
+import javax.validation.constraints.Size;
 
 /**
  * File Name: UserGatewayDto.java
@@ -22,9 +23,11 @@ public class UserGatewayDto {
 
     @NotNull
     @NotEmpty
+    @Size(max = 50)
     private String name;
 
     @NotNull
     @Email
+    @Size(max = 500)
     private String email;
 }

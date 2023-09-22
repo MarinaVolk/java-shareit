@@ -3,10 +3,8 @@ package ru.practicum.shareit.user;/* # parse("File Header.java")*/
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
-import ru.practicum.shareit.exception.EmailValidationException;
 import ru.practicum.shareit.exception.NotFoundException;
 
-import javax.validation.ConstraintViolationException;
 import java.util.Collection;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -23,18 +21,12 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class UserServiceImpl implements UserService {
     private final UserRepository userRepository;
-    private final UserValidator userValidator;
 
     @Override
     public UserDto addUser(UserDto userDto) {
         User user = UserMapper.fromDto(userDto);
         log.info("UserService: Создание пользователя с id={} ", user.getId());
-        userValidator.isValid(user);
-        try {
-            return UserMapper.toDto(userRepository.save(user));
-        } catch (ConstraintViolationException e) {
-            throw new EmailValidationException("Email не должен быть пустым.");
-        }
+        return UserMapper.toDto(userRepository.save(user));
     }
 
     @Override
@@ -106,5 +98,4 @@ public class UserServiceImpl implements UserService {
         }
         return user;
     }
-
 }

@@ -5,10 +5,13 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
+import ru.practicum.shareit.exception.InvalidDatesException;
 
 import javax.validation.Valid;
 import javax.validation.constraints.Positive;
 import javax.validation.constraints.PositiveOrZero;
+
+import static ru.practicum.shareit.booking.PageUtil.checkPageParameters;
 
 
 @RestController
@@ -23,6 +26,7 @@ public class BookingController {
     @PostMapping
     public ResponseEntity<Object> addBooking(@RequestHeader("X-Sharer-User-Id") long userId,
                                              @RequestBody @Valid BookItemRequestDto bookItemRequestDto) {
+        checkDatesBooking(bookItemRequestDto);
         return bookingClient.bookItem(userId, bookItemRequestDto);
     }
 
@@ -50,6 +54,7 @@ public class BookingController {
         BookingStatus state = BookingStatus.from(stateParam)
                 .orElseThrow(() -> new IllegalArgumentException("Unknown state: " + stateParam));
 
+        checkPageParameters(from, size);
         return bookingClient.getBookingsByBookerId(userId, state, from, size);
     }
 
@@ -62,6 +67,20 @@ public class BookingController {
         BookingStatus state = BookingStatus.from(stateParam)
                 .orElseThrow(() -> new IllegalArgumentException("Unknown state: " + stateParam));
 
+        checkPageParameters(from, size);
         return bookingClient.getBookingByItemOwnerId(userId, state, from, size);
+    }
+
+    // Валидация дат бронирования
+    private void checkDatesBooking(BookItemRequestDto bookingDto) {
+        if (bookingDto.getStart().isEqual(bookingDto.getEnd())) {
+            throw new InvalidDatesException("Дата начала бронирования не должна совпадать " +
+                    "с датой окончания бронирования.");
+        }
+
+        if (bookingDto.getStart().isAfter(bookingDto.getEnd())) {
+            throw new InvalidDatesException("Дата начала бронирования не должна быть " +
+                    "позже даты окончания бронирования.");
+        }
     }
 }

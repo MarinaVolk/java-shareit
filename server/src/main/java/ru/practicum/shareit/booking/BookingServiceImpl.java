@@ -30,7 +30,6 @@ import static ru.practicum.shareit.booking.PageUtil.createPage;
 @Slf4j
 public class BookingServiceImpl implements BookingService {
     private final BookingRepository bookingRepository;
-    private final BookingValidator bookingValidator;
     private final UserRepository userRepository;
     private final ItemService itemService;
     private final UserService userService;
@@ -41,9 +40,6 @@ public class BookingServiceImpl implements BookingService {
         ItemDto item = itemService.getItemById(booking.getItemId());
 
         validateItem(item, bookerId);
-
-        bookingValidator.isValid(booking);
-
         booking.setBooker(booker);
         booking.setStatus(BookingStatus.WAITING);
 
@@ -157,7 +153,6 @@ public class BookingServiceImpl implements BookingService {
         }
 
         Pageable pageable = createPage(from, size, "start");
-
         List<BookingDto> bookingsByBookerId = BookingMapper.toDtoList(bookingRepository.findBookingsByBookerId(bookerId, pageable).getContent());
         return getBookingDtos(status, bookingsByBookerId);
     }
@@ -306,5 +301,4 @@ public class BookingServiceImpl implements BookingService {
             throw new NotFoundException("Владелец не может бронировать свою вещь.");
         }
     }
-
 }

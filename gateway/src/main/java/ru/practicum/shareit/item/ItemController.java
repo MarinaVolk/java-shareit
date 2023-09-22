@@ -6,6 +6,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
+import ru.practicum.shareit.booking.PageUtil;
 
 import javax.validation.Valid;
 import javax.validation.constraints.Positive;
@@ -51,6 +52,7 @@ public class ItemController {
             @PositiveOrZero @RequestParam(name = "from", required = false, defaultValue = "0") Integer from,
             @Positive @RequestParam(name = "size", required = false, defaultValue = "20") Integer size) {
 
+        PageUtil.checkPageParameters(from, size);
         return itemClient.getItemsListByOwnerId(userId, from, size);
 
     }
@@ -62,6 +64,7 @@ public class ItemController {
             @PositiveOrZero @RequestParam(name = "from", required = false, defaultValue = "0") Integer from,
             @Positive @RequestParam(name = "size", required = false, defaultValue = "20") Integer size) {
 
+        PageUtil.checkPageParameters(from, size);
         return itemClient.searchItemForRentByText(userId, text, from, size);
 
     }

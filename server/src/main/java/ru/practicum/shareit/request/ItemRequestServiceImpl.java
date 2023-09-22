@@ -31,7 +31,6 @@ import static ru.practicum.shareit.booking.PageUtil.*;
 public class ItemRequestServiceImpl implements ItemRequestService {
     private final ItemRequestRepository itemRequestRepository;
     private final ItemRequestMapper itemRequestMapper;
-    private final ItemRequestValidator itemRequestValidator;
     private final UserService userService;
     private final ItemService itemService;
 
@@ -41,7 +40,6 @@ public class ItemRequestServiceImpl implements ItemRequestService {
         UserDto requestor = userService.getUserById(requestorId);
         User requestorForItem = UserMapper.fromDto(requestor);
 
-        itemRequestValidator.isValid(itemRequest);
         itemRequest.setRequestor(requestorForItem);
         itemRequest.setCreated(LocalDateTime.now());
         itemRequest = itemRequestRepository.save(itemRequest);
